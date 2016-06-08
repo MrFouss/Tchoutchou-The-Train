@@ -25,6 +25,8 @@ int main(int argc, char const *argv[]) {
 		//handle interruption
 		signal(SIGINT, handlerSIGINT);
 
+        program = getpid();
+
 		//TODO init queue
 
 		switch (manager = fork()) {
