@@ -11,11 +11,17 @@
 #include "manager.h"
 #include "network.h"
 
-//parent process
-pid_t program;
-//children process pid
-pid_t manager, train;
-//inter-process message queue
-int msqid;
+/********************/
+/* GLOBAL VARIABLES */
+/********************/
+
+// Parent process
+pid_t PROGRAM;
+
+// Children process PID
+pid_t MANAGER, TRAIN;
+
+// Inter-process message queue
+int MSQID;
 
 #endif

@@ -1,22 +1,22 @@
 #include "train.h"
 
-void* threadGrandeLigne(void* arg) {
-	//TODO
+void* threadGL(void* arg) {
+	// TODO
 	pthread_exit(NULL);
 }
 
-void* threadMarchandise(void* arg) {
-	//TODO
+void* threadM(void* arg) {
+	// TODO
 	pthread_exit(NULL);
 }
 
 void* threadTGV(void* arg) {
-	//TODO
+	// TODO
 	pthread_exit(NULL);
 }
 
 void initTrain(char* file) {
-	//counter used to initialize a train with a unique id, 0 to 9 are reserved for processes and manager threads
+	// Counter used to initialize a train with a unique id, 0 to 9 are reserved for processes and manager threads
 	int idCounter = 10;
 
 	//handle interruption signal
@@ -33,7 +33,7 @@ void exitTrain() {
 
 void processTrain(int msqid, char* file)
 {
-	trainGlobalMsqid = msqid;
+	TRAIN_GLOBAL_MSQID = msqid;
 	initTrain(file);
 
 	exitTrain();

@@ -1,58 +1,66 @@
 #include "main.h"
 
-void handlerSIGINT(int num) {
-	if (getpid() == program) {
-		exitProgram();
-	}
-}
-
-//called when an error occured
+/**
+ * Called when an error occurred
+ */
 void exitProgram() {
-	//ignore interruptions while end the program
+	// ignore interruptions while the programis ending */
 	signal(SIGINT, SIG_IGN);
 
-	//TODO inform every child process of the termination
-	//TODO remove message queue
-	// /!\ check the existance of process before sending them signals in case of an error
+	// TODO inform every child process of the termination
+	// TODO remove message queue
+	// TODO check the existence of process before sending them signals in case of an error
 	
 	exit(0);
 }
 
-int main(int argc, char const *argv[]) {
+/**
+ * Handler for the SIGINT signal
+ */
+void handlerSIGINT(int num) {
+	if (getpid() == PROGRAM)
+        exitProgram();
+}
+
+/**
+ * Main function for the program
+ */
+int main(const int argc, const char *argv[]) {
 	if (argc != 2) {
-		printf("Expected command line :\n ./exec <train file>\n");
+		printf("Usage :\n");
+        printf("\t%s [PATH TO TRAIN FILE]\n", argv[0]);
 	} else {
-		//handle interruption
+		// handles interruptions from SIGINT
 		signal(SIGINT, handlerSIGINT);
 
-        program = getpid();
+        PROGRAM = getpid();
 
-		//TODO init queue
+		// TODO init queue
 
-		switch (manager = fork()) {
-			case 0 :
-				processManager(msqid);
+		switch (MANAGER = fork()) {
+            case 0 :
+				processManager(MSQID, argv[0]);
 				break;
 			case -1 :
 				exitProgram();
 				break;
 			default :
-				switch (train = fork()) {
+				switch (TRAIN = fork()) {
 					case 0 :
-						processTrain(msqid, argv[1]);
+						// processTrain(MSQID, argv[1]);
 						break;
 					case -1 :
 						exitProgram();
 						break;
 					default :
 						//wait for manager and train
-						waitpid(train, NULL, 0);
-						waitpid(manager, NULL, 0);
+						waitpid(TRAIN, NULL, 0);
+						waitpid(MANAGER, NULL, 0);
 				}
 				break;
 		}
 
-		//signal handler back to normal
+		// signal handler back to normal
 		signal(SIGINT, SIG_DFL);
 	}
 
