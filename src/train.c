@@ -15,24 +15,23 @@ void* threadTGV(void* arg) {
 	pthread_exit(NULL);
 }
 
-void initTrain(char* file) {
-	// Counter used to initialize a train with a unique id, 0 to 9 are reserved for processes and manager threads
-	int idCounter = 10;
-
-	//handle interruption signal
-	signal(SIGINT, exitTrain);
-
-	//TODO generate trains according to the specified file
-}
-
 void exitTrain() {
 	//join threads
 
 	exit(0);
 }
 
-void processTrain(int msqid, char* file)
-{
+void initTrain(char* file) {
+	// Counter used to initialize a train with a unique id, 0 to 9 are reserved for processes and manager threads
+	int idCounter = 10;
+
+	// Handle interruption signal SIGINT
+	signal(SIGINT, exitTrain);
+
+	//TODO generate trains according to the specified file
+}
+
+void processTrain(int msqid, char* file) {
 	TRAIN_GLOBAL_MSQID = msqid;
 	initTrain(file);
 

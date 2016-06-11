@@ -48,4 +48,20 @@ typedef struct TrainNode* TrainList;
 TrainList TRAINS;
 int TRAIN_GLOBAL_MSQID;
 
+/**************/
+/* PROTOTYPES */
+/**************/
+
+void* threadGL(void* arg);
+
+void* threadM(void* arg);
+
+void* threadTGV(void* arg);
+
+void exitTrain();
+
+void initTrain(char* file);
+
+void processTrain(int msqid, char* file);
+
 #endif

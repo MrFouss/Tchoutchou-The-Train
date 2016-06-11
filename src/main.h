@@ -24,4 +24,18 @@ pid_t MANAGER, TRAIN;
 // Inter-process message queue
 int MSQID;
 
+/**************/
+/* PROTOTYPES */
+/**************/
+
+/**
+ * Called when an error occurred
+ */
+void exitProgram();
+
+/**
+ * Handler for the SIGINT signal
+ */
+void handlerSIGINT(int num);
+
 #endif

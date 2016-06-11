@@ -39,7 +39,7 @@ int main(const int argc, const char *argv[]) {
 
 		switch (MANAGER = fork()) {
             case 0 :
-				processManager(MSQID, argv[0]);
+				processManager(MSQID);
 				break;
 			case -1 :
 				exitProgram();
@@ -47,7 +47,7 @@ int main(const int argc, const char *argv[]) {
 			default :
 				switch (TRAIN = fork()) {
 					case 0 :
-						// processTrain(MSQID, argv[1]);
+						processTrain(MSQID, argv[1]);
 						break;
 					case -1 :
 						exitProgram();
