@@ -7,10 +7,16 @@ void exitProgram() {
 	/* ignore interruptions while the program is ending */
 	signal(SIGINT, SIG_IGN);
 
-	/* TODO inform every child process of the termination */
-	/* TODO remove message queue */
-	/* TODO check the existence of process before sending them signals in case of an error */
-	
+	/* wait for manager and train */
+	waitpid(TRAIN, NULL, 0);
+	waitpid(MANAGER, NULL, 0);
+
+	if(msgctl(MSQID, IPC_RMID, NULL) == -1) {
+        fprintf(stderr, "Error while deleting the global message queue.\n");
+        fprintf(stderr, "\tError %d: %s\n", errno, strerror(errno));
+        exit(-1);
+    }
+
 	exit(0);
 }
 
@@ -18,8 +24,14 @@ void exitProgram() {
  * Handler for the SIGINT signal
  */
 void handlerSIGINT(int num) {
-	if (getpid() == PROGRAM)
-        exitProgram();
+	/* inform child process that they must finish their execution */
+	if (MANAGER != -1) {
+		kill(MANAGER, SIGINT);
+	}
+	if (TRAIN != -1) {
+		kill(TRAIN, SIGINT);
+	}
+    exitProgram();
 }
 
 /**
@@ -36,6 +48,11 @@ int main(const int argc, const char *argv[]) {
         PROGRAM = getpid();
 
 		/* TODO init queue */
+		if((MSQID = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0640)) == -1) {
+	        fprintf(stderr, "Error while creating the global message queue.\n");
+	        fprintf(stderr, "\tError %d: %s\n", errno, strerror(errno));
+	        return -1;
+    	}
 
 		switch (MANAGER = fork()) {
             case 0 :
@@ -53,9 +70,8 @@ int main(const int argc, const char *argv[]) {
 						exitProgram();
 						break;
 					default :
-						/* wait for manager and train */
-						waitpid(TRAIN, NULL, 0);
-						waitpid(MANAGER, NULL, 0);
+						exitProgram();
+						break;
 				}
 				break;
 		}

@@ -1,22 +1,43 @@
 #include "manager.h"
 
+void handler(int num) {
+    /* inform child process that they must finish their execution */
+    pthread_kill(P0, SIGINT);
+    pthread_kill(P1, SIGINT);
+    pthread_kill(P2, SIGINT);
+    pthread_kill(P3, SIGINT);
+    exitProgram();
+}
+
 void* threadP0(void* arg) {
-	/* TODO */
 	pthread_exit(NULL);
 }
 
 void* threadP1(void* arg) {
-	/* TODO */
+    Message msg;
+
+    msgrcv(MANAGER_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), 1, 0);
+    printf("1 : recieved message force request\n");
+    msgrcv(MANAGER_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), 1, 0);
+    printf("1 : recieved message acknowledge\n");
 	pthread_exit(NULL);
 }
 
 void* threadP2(void* arg) {
-	/* TODO */
+    Message msg;
+
+    msgrcv(MANAGER_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), 2, 0);
+    printf("2 : recieved message request -> allowing to %d\n", (int) msg.src);
+    msg.type = MSG_ACKNOWLEDGE;
+    msg.dst = msg.src;
+    msg.src = 2;
+    msgsnd(MANAGER_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+    msgrcv(MANAGER_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), 2, 0);
+    printf("2 : recieved message acknowledge\n");
 	pthread_exit(NULL);
 }
 
 void* threadP3(void* arg) {
-	/* TODO */
 	pthread_exit(NULL);
 }
 
@@ -63,7 +84,7 @@ int initManager() {
     pthread_attr_t thr_attr;
 
     /* handles interruption from SIGINT */
-	signal(SIGINT, exitManager);
+	signal(SIGINT, handler);
 
     if((MANAGER_MSQID = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0640)) == -1) {
         fprintf(stderr, "Error while creating the message queue.\n");
@@ -111,7 +132,7 @@ void processManager(int global_msqid) {
 	MANAGER_GLOBAL_MSQID = global_msqid;
 
 	if(initManager() == -1)
-        fprintf(stderr, "Error while the initialization of the process manager.\n");
+        fprintf(stderr, "Error during the initialization of the process manager.\n");
 
 	exitManager(0);
 }

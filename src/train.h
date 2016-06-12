@@ -4,6 +4,11 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+#include <unistd.h>
+#include "communication.h"
 
 /*************************/
 /* STRUCTURES DEFINITION */
@@ -21,42 +26,47 @@ typedef enum TrainType {
 } TrainType;
 
 typedef enum Position {
-    POS_GARE = 0,
-	POS_AIGUILLAGE = 1,
-	POS_TUNNEL = 2,
-	POS_VOIES = 3
+    POS_VOIEC = 0,
+    POS_VOIED = 1,
+	POS_AIGUILLAGE1 = 2,
+	POS_AIGUILLAGE2 = 3,
+	POS_TUNNEL = 4,
+	POS_LIGNE = 5,
+	POS_VOIEA = 6,
+	POS_VOIEB = 7,
+	POS_LIGNETGV = 8,
+	POS_LIGNEM = 9,
+	POS_LIGNEGL = 10
 } Position;
 
 typedef struct Train {
 	int id;
 	TrainType type;
 	Direction direction;
-	int position;
+	Position position;
 } Train;
 
+/*
 typedef struct TrainNode {
     pthread_t thread;
     struct TrainNode* next;
 } TrainNode;
 
 typedef struct TrainNode* TrainList;
-
+*/
 /********************/
 /* GLOBAL VARIABLES */
 /********************/
 
-TrainList TRAINS;
+pthread_t* TRAINS;
+int TRAIN_NBR;
 int TRAIN_GLOBAL_MSQID;
 
 /**************/
 /* PROTOTYPES */
 /**************/
 
-void* threadGL(void* arg);
-
 void* threadM(void* arg);
-
-void* threadTGV(void* arg);
 
 void exitTrain(int num);
 

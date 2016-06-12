@@ -11,6 +11,7 @@
 #include <sys/msg.h>
 #include <errno.h>
 #include <string.h>
+#include "communication.h"
 
 /**********/
 /* MACROS */
