@@ -6,14 +6,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <mqueue.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <errno.h>
+#include <string.h>
 
 /**********/
 /* MACROS */
 /**********/
 
-#define QNAME "/iLikeTrains"
-#define MAXMSG 50
+#define QNAME "/iliketrains"
+#define MAXMSG 20
 #define MSGSIZE 256
 
 /********************/
@@ -21,7 +25,7 @@
 /********************/
 
 pthread_t P0, P1, P2, P3;
-mqd_t MANAGER_MSQID, MANAGER_GLOBAL_MSQID;
+int MANAGER_MSQID, MANAGER_GLOBAL_MSQID;
 
 /**************/
 /* PROTOTYPES */

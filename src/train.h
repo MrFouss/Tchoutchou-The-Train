@@ -58,10 +58,10 @@ void* threadM(void* arg);
 
 void* threadTGV(void* arg);
 
-void exitTrain();
+void exitTrain(int num);
 
-void initTrain(char* file);
+void initTrain(const char* file);
 
-void processTrain(int msqid, char* file);
+void processTrain(int msqid, const char* file);
 
 #endif
