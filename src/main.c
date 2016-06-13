@@ -9,6 +9,7 @@ void exitProgram() {
 
 	/* wait for manager and train */
 	waitpid(TRAIN, NULL, 0);
+	kill(MANAGER, SIGINT);
 	waitpid(MANAGER, NULL, 0);
 
 	if(msgctl(MSQID, IPC_RMID, NULL) == -1) {

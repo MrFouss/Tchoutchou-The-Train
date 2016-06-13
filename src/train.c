@@ -16,41 +16,45 @@ void* threadM(void* arg) {
 	Train self = *(Train*)arg;
 	Message msg;
 	msg.src = self.id;
-	printf("%d : I am %d\n", self.id, self.id);
-	msg.train = &self;
+
+	printf("%d : I am a M train.\n", self.id);
 
 	if (self.direction == DIR_WE) {
 		self.position = POS_VOIEA;
-		printf("%d : informing P1 of my arrival\n", self.id);
+		printf("%d : Informing AIGUILLAGE 1 of my arrival\n", self.id);
 		msg.dst = 1;
 		msg.type = MSG_REQUEST_FORCE;
+		msg.train = self;
 		msgsnd(TRAIN_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), 0);
-		usleep(10000);
-		printf("%d : arriving at aiguillage 1\n", self.id);
+		usleep(1000000);
+		printf("%d : Arriving at AIGUILLAGE 1\n", self.id);
 
 		self.position = POS_AIGUILLAGE1;
-		usleep(10000);
+		usleep(1000000);
 
 		self.position = POS_LIGNEM;
-		printf("%d : informing P1 that I passed aiguillage 1\n", self.id);
+		printf("%d : Informing AIGUILLAGE 1 that I passed AIGUILLAGE 1\n", self.id);
 		msg.dst = 1;
-		msg.type = MSG_ACKNOWLEDGE;
+		msg.type = MSG_NOTIFICATION;
+		msg.train = self;
 		msgsnd(TRAIN_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), 0);
-		usleep(10000);
-		printf("%d : informing P2 that I would like to access tunnel (waiting)\n", self.id);
-		msg.dst = 2;
+		usleep(1000000);
+		printf("%d : Informing TUNNEL that I would like to access TUNNEL (waiting for authorization)\n", self.id);
+		msg.dst = 3;
 		msg.type = MSG_REQUEST;
+		msg.train = self;
 		msgsnd(TRAIN_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), 0);
 		msgrcv(TRAIN_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
-		printf("%d : recieved authorization from P2 to pass the tunnel\n", self.id);
+		printf("%d : recieved authorization from TUNNEL to pass the TUNNEL\n", self.id);
 
 		self.position = POS_TUNNEL;
-		usleep(10000);
+		usleep(1000000);
 
 		self.position = POS_LIGNE;
-		printf("%d : inform P2 I passed the tunnel\n", self.id);
-		msg.dst = 2;
-		msg.type = MSG_ACKNOWLEDGE;
+		printf("%d : Inform TUNNEL I passed the TUNNEL\n", self.id);
+		msg.train = self;
+		msg.dst = 3;
+		msg.type = MSG_NOTIFICATION;
 		msgsnd(TRAIN_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), 0);
 	}
 
@@ -83,13 +87,11 @@ void initTrain(const char* file) {
 	signal(SIGCONT, hand);
 
 	Train t;
-	t.id = 11;
+	t.id = idCounter++;
 	t.type = TYPE_M;
 	t.direction = DIR_WE;
 	t.position = POS_VOIEA;
 
-
-	printf("creating thread train !\n");
 	pthread_t tr;
 	if((error = pthread_create(&tr, NULL, threadM, (void*)&t)) != 0) {
         fprintf(stderr, "Error while creating train thread.\n");
@@ -98,6 +100,22 @@ void initTrain(const char* file) {
     	TRAINS[TRAIN_NBR] = tr;
     	TRAIN_NBR++;
     }
+    /*
+    usleep(1000000);
+
+	t.id = idCounter++;
+	t.type = TYPE_M;
+	t.direction = DIR_WE;
+	t.position = POS_VOIEA;
+
+	if((error = pthread_create(&tr, NULL, threadM, (void*)&t)) != 0) {
+        fprintf(stderr, "Error while creating train thread.\n");
+        fprintf(stderr, "\tError %d: %s\n", error, strerror(error));
+    } else {
+    	TRAINS[TRAIN_NBR] = tr;
+    	TRAIN_NBR++;
+    }
+    */
 }
 
 void processTrain(int msqid, const char* file) {

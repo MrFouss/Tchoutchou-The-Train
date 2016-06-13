@@ -9,7 +9,6 @@
 #include <unistd.h>
 #include "train.h"
 #include "manager.h"
-#include "network.h"
 
 /********************/
 /* GLOBAL VARIABLES */
