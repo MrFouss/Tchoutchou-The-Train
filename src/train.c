@@ -75,6 +75,7 @@ void exitTrain(int num) {
 }
 
 void initTrain(const char* file) {
+	time_t start = time(NULL);
 	/* Counter used to initialize a train with a unique id, 0 to 9 are reserved for processes and manager threads */
 	int idCounter = 10;
 	int error;
@@ -84,38 +85,38 @@ void initTrain(const char* file) {
 
 	/* Handle interruption signal SIGINT */
 	signal(SIGINT, SIGINThandle);
-	signal(SIGCONT, hand);
 
+
+    Parser p = initParser(file);
+    TrainEvent te;
 	Train t;
-	t.id = idCounter++;
-	t.type = TYPE_M;
-	t.direction = DIR_WE;
-	t.position = POS_VOIEA;
-
 	pthread_t tr;
-	if((error = pthread_create(&tr, NULL, threadM, (void*)&t)) != 0) {
-        fprintf(stderr, "Error while creating train thread.\n");
-        fprintf(stderr, "\tError %d: %s\n", error, strerror(error));
-    } else {
-    	TRAINS[TRAIN_NBR] = tr;
-    	TRAIN_NBR++;
-    }
-    /*
-    usleep(1000000);
 
-	t.id = idCounter++;
-	t.type = TYPE_M;
-	t.direction = DIR_WE;
-	t.position = POS_VOIEA;
 
-	if((error = pthread_create(&tr, NULL, threadM, (void*)&t)) != 0) {
-        fprintf(stderr, "Error while creating train thread.\n");
-        fprintf(stderr, "\tError %d: %s\n", error, strerror(error));
-    } else {
-    	TRAINS[TRAIN_NBR] = tr;
-    	TRAIN_NBR++;
-    }
-    */
+    while (p.remEventNbr > 0) {
+	    
+	    te = nextEvent(&p);
+
+	    usleep(1000000*(te.startTime - (time(NULL) - start)));
+
+		t.id = idCounter++;
+		t.type = te.type;
+		t.direction = te.direction;
+
+		switch (t.type) {
+			case TYPE_M :
+				if((error = pthread_create(&tr, NULL, threadM, (void*)&t)) != 0) {
+					fprintf(stderr, "Error while creating M train thread.\n");
+					fprintf(stderr, "\tError %d: %s\n", error, strerror(error));
+				} else {
+					TRAINS[TRAIN_NBR] = tr;
+					TRAIN_NBR++;
+				}
+				break;
+		}
+
+		usleep(1000000);
+	}
 }
 
 void processTrain(int msqid, const char* file) {

@@ -9,6 +9,8 @@
 #include <string.h>
 #include <unistd.h>
 #include "communication.h"
+#include "parser.h"
+#include <time.h>
 
 /*************************/
 /* STRUCTURES DEFINITION */

@@ -6,14 +6,14 @@
 #include <pthread.h>
 
 typedef enum Direction {
-	DIR_EW,
-	DIR_WE
+	DIR_EW = 0,
+	DIR_WE = 1
 } Direction;
 
 typedef enum TrainType {
-    TYPE_TGV = 1,
-	TYPE_GL = 2,
-	TYPE_M = 3
+    TYPE_TGV = 0,
+	TYPE_GL = 1,
+	TYPE_M = 2
 } TrainType;
 
 typedef enum Position {
