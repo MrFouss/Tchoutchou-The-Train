@@ -75,6 +75,7 @@ void exitTrain(int num) {
     	pthread_join(TRAINS[i], NULL);
     }
 
+    /* free allocation */
     free(TRAINS);
 
     exit(0);
@@ -85,6 +86,9 @@ void initTrain(const char* file) {
 	/* Counter used to initialize a train with a unique id, 0 to 9 are reserved for processes and manager threads */
 	int idCounter = 10;
 	int error;
+	TrainEvent te;
+	Train t;
+	pthread_t tr;
 
 	TRAIN_NBR = 0;
 	TRAINS = (pthread_t*)malloc(sizeof(pthread_t)*10);
@@ -92,23 +96,24 @@ void initTrain(const char* file) {
 	/* Handle interruption signal SIGINT */
 	signal(SIGINT, trainHandlerSIGINT);
 
-
+	/* init parser */
     Parser p = initParser(file);
-    TrainEvent te;
-	Train t;
-	pthread_t tr;
 
-
+    /* while there is remaining vents */
     while (p.remEventNbr > 0) {
 	    
+	    /* get next event */
 	    te = nextEvent(&p);
 
+	    /* wait for the beginning of the event */
 	    usleep(1000000*(te.startTime - (time(NULL) - start)));
 
+	    /* set train thread argument */
 		t.id = idCounter++;
 		t.type = te.type;
 		t.direction = te.direction;
 
+		/* lauc thread */
 		switch (t.type) {
 			case TYPE_M :
 				if((error = pthread_create(&tr, NULL, threadM, (void*)&t)) != 0) {
@@ -127,6 +132,7 @@ void initTrain(const char* file) {
                 break;
 		}
 
+		/* wait 1 sencond to be sure the thread had time to copy its argument */
 		usleep(1000000);
 	}
 }

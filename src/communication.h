@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <pthread.h>
 
+/* train related structures */
+
 typedef enum Direction {
 	DIR_EW = 0,
 	DIR_WE = 1
@@ -37,6 +39,8 @@ typedef struct Train {
 	Position position;
 } Train;
 
+/* message queue messages structures (sent through message queue) */
+
 typedef enum MessageType {
 	MSG_REQUEST = 0,
 	MSG_REQUEST_FORCE = 1,
@@ -51,24 +55,37 @@ typedef struct Message {
 	struct Train train;
 } Message;
 
+/* message list structures */
 
 typedef struct MessageListElement {
     Message message;
     struct MessageListElement* next;
-} MessageQueueElement;
+} MessageListElement;
 
-typedef struct MessageQueue {
-	MessageQueueElement* first;
-	MessageQueueElement* last;
+typedef struct MessageList {
+	MessageListElement* first;
+	MessageListElement* last;
 	int size;
-} MessageQueue;
+} MessageList;
 
-MessageQueue initQueue();
+/**
+ * Initialize an empty message list
+ */
+MessageList initList();
 
-void offer(MessageQueue*, Message);
+/**
+ * Add a message at the end of the list
+ */
+void offer(MessageList*, Message);
 
-Message poll(MessageQueue*);
+/**
+ * Pop and return the first message of the list
+ */
+Message poll(MessageList*);
 
-void removeQueue(MessageQueue*);
+/**
+ * Remove every messages from the list, thus freeing previously allocated memory
+ */
+void removeList(MessageList*);
 
 #endif

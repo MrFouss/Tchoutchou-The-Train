@@ -1,7 +1,7 @@
 #include "communication.h"
 
-MessageQueue initQueue() {
-	MessageQueue mq;
+MessageList initList() {
+	MessageList mq;
 
 	mq.first = NULL;
 	mq.last = NULL;
@@ -10,8 +10,8 @@ MessageQueue initQueue() {
 	return mq;
 }
 
-void offer(MessageQueue* mq, Message msg) {
-	MessageQueueElement* e = (MessageQueueElement*)malloc(sizeof(MessageQueueElement));
+void offer(MessageList* mq, Message msg) {
+	MessageListElement* e = (MessageListElement*)malloc(sizeof(MessageListElement));
 	
 	e->message = msg;
 	e->next = NULL;
@@ -24,7 +24,7 @@ void offer(MessageQueue* mq, Message msg) {
 	mq->size++;
 }
 
-Message poll(MessageQueue* mq) {
+Message poll(MessageList* mq) {
 	Message msg = mq->first->message;
 
 	if (mq->size == 1) {
@@ -36,7 +36,7 @@ Message poll(MessageQueue* mq) {
 	return msg;
 }
 
-void removeQueue(MessageQueue* mq) {
+void removeList(MessageList* mq) {
 	while (mq->size > 0) {
 		poll(mq);
 	}

@@ -1,6 +1,6 @@
 #include "manager.h"
 
-void handler(int num) {
+void managerSIGINThandler(int num) {
     /* inform child process that they must finish their execution */
     pthread_kill(AIGUILLAGE1, SIGTERM);
     pthread_kill(AIGUILLAGE2, SIGTERM);
@@ -13,7 +13,7 @@ void* managerThread(void* arg) {
     long permissionFreq = ((ManagerThreadArg*)arg)->permissionFreq;
     int id = ((ManagerThreadArg*)arg)->id;
     Message msg;
-    MessageQueue* mq = ((ManagerThreadArg*)arg)->messageQueue;
+    MessageList* mq = ((ManagerThreadArg*)arg)->messageList;
     int passingTrain = 0;
 
 	strcpy(name, ((ManagerThreadArg*)arg)->name);
@@ -60,16 +60,12 @@ void exitManager(int num) {
     /* Join all 4 manager threads */
     int error;
 
-    /*
-    if(msgctl(MANAGER_MSQID, IPC_RMID, NULL) == -1) {
-        fprintf(stderr, "Error while deleting the message queue.\n");
-        fprintf(stderr, "\tError %d: %s\n", errno, strerror(errno));
-        exit(-1);
-    }
-    */
-    removeQueue(&A1MSG);
-    removeQueue(&A2MSG);
-    removeQueue(&TMSG);
+    /* free memory allocated by message lists*/
+    removeList(&A1MSG);
+    removeList(&A2MSG);
+    removeList(&TMSG);
+
+    /*join threads*/
 
     if((error = pthread_join(AIGUILLAGE1, NULL)) != 0) {
         fprintf(stderr, "Error while joining aiguillage1.\n");
@@ -94,36 +90,19 @@ void exitManager(int num) {
 
 int initManager() {
     int error;
-    pthread_attr_t thr_attr;
 
     /* handles interruption from SIGINT */
-	signal(SIGINT, handler);
-
-	/*
-    if((MANAGER_MSQID = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0640)) == -1) {
-        fprintf(stderr, "Error while creating the message queue.\n");
-        fprintf(stderr, "\tError %d: %s\n", errno, strerror(errno));
-        return -1;
-    }
-    */
-
-    /* Initialize the attributes of the threads */
-    /*
-    if(pthread_attr_init(&thr_attr) != 0) {
-        fprintf(stderr, "Error while setting the attributes of the threads.\n");
-        return -1;
-    }
-	*/
+	signal(SIGINT, managerSIGINThandler);
 
     /* Create all 4 manager threads */
 
+    /* init argument passed to manager threads*/
     ManagerThreadArg a1, a2, t;
-
     strcpy(a1.name, "AIGUILLAGE 1");
     a1.id = 1;
     a1.permissionFreq = 500000;
-    A1MSG = initQueue();
-    a1.messageQueue = &A1MSG;
+    A1MSG = initList();
+    a1.messageList = &A1MSG;
 
     if((error = pthread_create(&AIGUILLAGE1, NULL, managerThread, (void*)&a1)) != 0) {
         fprintf(stderr, "Error while creating aiguillage1.\n");
@@ -134,8 +113,8 @@ int initManager() {
     strcpy(a2.name, "AIGUILLAGE 2");
     a2.id = 2;
     a2.permissionFreq = 500000;
-    A1MSG = initQueue();
-    a2.messageQueue = &A2MSG;
+    A1MSG = initList();
+    a2.messageList = &A2MSG;
 
     if((error = pthread_create(&AIGUILLAGE2, NULL, managerThread, (void*)&a2)) != 0) {
         fprintf(stderr, "Error while creating aiguillage2.\n");
@@ -146,8 +125,8 @@ int initManager() {
     strcpy(t.name, "TUNNEL");
     t.id = 3;
     t.permissionFreq = 500000;
-    TMSG = initQueue();
-    t.messageQueue = &TMSG;
+    TMSG = initList();
+    t.messageList = &TMSG;
 
     if((error = pthread_create(&TUNNEL, NULL, managerThread, (void*)&t)) != 0) {
         fprintf(stderr, "Error while creating tunnel.\n");
@@ -155,13 +134,13 @@ int initManager() {
         return -1;
 	}
 
-	sleep(2);
+    /* wait 2 s to be sure that threads had time to make a copy of their thread argument*/
+	usleep(2000000);
 
     return 0;
 }
 
 void processManager(int global_msqid) {
-
 	MANAGER_GLOBAL_MSQID = global_msqid;
 
 	if(initManager() == -1)

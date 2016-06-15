@@ -10,6 +10,7 @@ void exitProgram() {
 
 	/* wait for manager and train */
 	waitpid(TRAIN, NULL, 0);
+	/* signal to manager that every train events ave been played and terminated*/
 	kill(MANAGER, SIGINT);
 	waitpid(MANAGER, NULL, 0);
 
