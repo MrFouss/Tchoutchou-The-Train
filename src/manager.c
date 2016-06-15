@@ -16,8 +16,9 @@ void* managerThread(void* arg) {
 	char name[30]="";
     long permissionFreq = ((ManagerThreadArg*)arg)->permissionFreq;
     int id = ((ManagerThreadArg*)arg)->id;
-    Message msg;
-    MessageList* mq = ((ManagerThreadArg*)arg)->messageList;
+    int i;
+    Message msg, tmpMsg;
+    MessageList* ml = ((ManagerThreadArg*)arg)->messageList;
     int passingTrain = 0;
 
 	strcpy(name, ((ManagerThreadArg*)arg)->name);
@@ -29,29 +30,48 @@ void* managerThread(void* arg) {
     	while (msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), id, IPC_NOWAIT) != -1) {
 	        switch (msg.type) {
 	            case MSG_REQUEST_FORCE :
-	                printf("%s : Received force request from train %li.\n", name, msg.src);
+	                printf("%s : Receive force request from train %li.\n", name, msg.src);
 	                passingTrain++;
 	                break;
 	            case MSG_REQUEST :
-	                printf("%s : Received request from train %li.\n", name, msg.src);
-	                offer(mq, msg); /* store request in message queue */
+	                printf("%s : Receive request from %li.\n", name, msg.src);
+	                offer(ml, msg); /* store request in message queue */
 	                break;
 	            case MSG_NOTIFICATION :
-	            	printf("%s : Received notification from train %li.\n", name, msg.src);
+	            	printf("%s : Receive notification from %li.\n", name, msg.src);
 	            	passingTrain--;
 	                break;
                 default :
                     fprintf(stderr, "Error: you're not supposed to go there");
 	        }
     	}
-    	if (passingTrain == 0 && mq->size != 0) { /* if there is no train on the critical railway */
-    		/* TODO manage a priority */
+    	if (passingTrain == 0 && ml->size != 0) { /* if there is no train on the critical railway */
+            /* priority management : first lowest priority */
+
+            msg = poll(ml);
+            offer(ml, msg);
+    		for (i = 1; i < ml->size; i++) {
+                tmpMsg = poll(ml);
+                if (tmpMsg.type < msg.type) {
+                    msg = tmpMsg;
+                }
+                offer(ml, tmpMsg);
+            }
+
+            for (i = 0; i < ml->size; i++) {
+                tmpMsg = poll(ml);
+                if (msg.src != tmpMsg.src) {
+                    offer(ml, tmpMsg);
+                }
+            }
+
+            /* sending permission to selected train */
+
     		passingTrain++;
-    		msg = poll(mq);
     		msg.dst = msg.src;
     		msg.src = id;
     		msg.type = MSG_PERMISSION;
-    		printf("%s : Informing train %li that it can pass.\n", name, msg.dst);
+    		printf("%s : Send permission to %li.\n", name, msg.dst);
     		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
     	}
     }

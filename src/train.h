@@ -18,19 +18,14 @@
 /**************/
 
 /** 
- * Marchandise train thread
+ * Merchandise train thread
  */
-void* threadM(void* arg);
+void* threadMerchandise(void* arg);
 
 /** 
- * Grande Ligne train thread
+ * Passenger (TGV or GL) train thread
  */
-void* threadGL(void* arg);
-
-/** 
- * TGV train thread
- */
-void* threadTGV(void* arg);
+void* threadPassenger(void* arg);
 
 /** 
  * ensure that every allocated memory is properly freed

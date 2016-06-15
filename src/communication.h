@@ -28,8 +28,9 @@ typedef enum Position {
 	POS_VOIEA = 6,
 	POS_VOIEB = 7,
 	POS_LIGNETGV = 8,
-	POS_LIGNEM = 9,
-	POS_LIGNEGL = 10
+	POS_LIGNEM_WE = 9,
+	POS_LIGNEM_EW = 10,
+	POS_LIGNEGL = 11
 } Position;
 
 typedef struct Train {
@@ -95,6 +96,15 @@ pthread_t* TRAINS;
 
 /* number of trains */
 int TRAIN_NBR;
+
+/* if > 0 : there is trains going west-east on the line and vis versa */
+int LIGNETGV_WE, LIGNEGL_WE, LIGNE_WE;
+
+/* mutex used in direction setting of lines */
+pthread_mutex_t LIGNE_DIR_MUTEX, LIGNEGL_DIR_MUTEX, LIGNETGV_DIR_MUTEX;
+
+/* conditions fall true if LIGNEx_WE == 0 */
+pthread_cond_t LIGNE_DIR_COND, LIGNEGL_DIR_COND, LIGNETGV_DIR_COND;
 
 /**************/
 /* PROTOTYPES */
