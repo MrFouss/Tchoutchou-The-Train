@@ -87,10 +87,10 @@ pthread_t AIGUILLAGE1, AIGUILLAGE2, TUNNEL;
 /* list of messages used by manager threads to store messages */
 MessageList A1MSG, A2MSG, TMSG;
 
-/* pending non read messages */
+/* pending unread messages */
 int PENDING_MSG;
 
-/* list of thrains */
+/* list of trains */
 pthread_t* TRAINS;
 
 /* number of trains */

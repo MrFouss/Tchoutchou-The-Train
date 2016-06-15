@@ -69,7 +69,7 @@ void* threadM(void* arg) {
 
 void exitTrain(int num) {
 	/* Join all 4 manager threads */
-    int error, i;
+    int i;
 
     for (i = 0; i < TRAIN_NBR; i++) {
     	pthread_join(TRAINS[i], NULL);

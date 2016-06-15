@@ -1,6 +1,6 @@
 #include "manager.h"
 
-void managerSIGINThandler(int num) {
+void managerHandlerSIGINT(int num) {
     /* inform child process that they must finish their execution */
     
     /* leave time to manager threads to finish reading their message queue */
@@ -96,7 +96,7 @@ int initManager() {
     int error;
 
     /* handles interruption from SIGINT */
-	signal(SIGINT, managerSIGINThandler);
+	signal(SIGINT, managerHandlerSIGINT);
 
     /* Create all 4 manager threads */
 

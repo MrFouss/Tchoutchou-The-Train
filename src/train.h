@@ -38,12 +38,12 @@ void* threadTGV(void* arg);
 void exitTrain(int num);
 
 /** 
- * Initialize variables and lauch train threads according to a file
+ * Initialize variables and launch train threads according to a file
  */
 void initTrain(const char* file);
 
 /** 
- * Lauches a Train thread, from creation to termination
+ * Launches a Train thread, from creation to termination
  */
 void processTrain(int msqid, const char* file);
 

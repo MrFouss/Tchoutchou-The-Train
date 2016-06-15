@@ -31,7 +31,7 @@ typedef struct ManagerThreadArg {
 /**
  * Called to interrupt process (signal handler)
  */
-void managerSIGINThandler(int num);
+void managerHandlerSIGINT(int num);
 
 /**
  * Critical zone manager thread function
