@@ -64,8 +64,11 @@ typedef struct MessageQueue {
 } MessageQueue;
 
 MessageQueue initQueue();
+
 void offer(MessageQueue*, Message);
+
 Message poll(MessageQueue*);
+
 void removeQueue(MessageQueue*);
 
 #endif

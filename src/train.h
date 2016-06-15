@@ -5,18 +5,17 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/msg.h>
+#include <bits/sigthread.h>
+
 #include "communication.h"
 #include "parser.h"
-#include <time.h>
 
 /*************************/
 /* STRUCTURES DEFINITION */
 /*************************/
-
-
 
 /*
 typedef struct TrainNode {
@@ -26,6 +25,7 @@ typedef struct TrainNode {
 
 typedef struct TrainNode* TrainList;
 */
+
 /********************/
 /* GLOBAL VARIABLES */
 /********************/
@@ -39,6 +39,10 @@ int TRAIN_GLOBAL_MSQID;
 /**************/
 
 void* threadM(void* arg);
+
+void* threadGL(void* arg);
+
+void* threadTGV(void* arg);
 
 void exitTrain(int num);
 

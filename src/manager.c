@@ -2,9 +2,9 @@
 
 void handler(int num) {
     /* inform child process that they must finish their execution */
-    pthread_kill(aiguillage1, SIGTERM);
-    pthread_kill(aiguillage2, SIGTERM);
-    pthread_kill(tunnel, SIGTERM);
+    pthread_kill(AIGUILLAGE1, SIGTERM);
+    pthread_kill(AIGUILLAGE2, SIGTERM);
+    pthread_kill(TUNNEL, SIGTERM);
     exitProgram();
 }
 
@@ -20,7 +20,7 @@ void* managerThread(void* arg) {
 
 	printf("%s : My id is %d.\n", name, id);
 
-    while (1) {
+    while(1) {
     	usleep(permissionFreq);
     	while (msgrcv(MANAGER_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), id, IPC_NOWAIT) != -1) {
 	        switch (msg.type) {
@@ -36,6 +36,8 @@ void* managerThread(void* arg) {
 	            	printf("%s : Recieved notification from train %li.\n", name, msg.src);
 	            	passingTrain--;
 	                break;
+                default :
+                    fprintf(stderr, "Error: you're not supposed to go there");
 	        }
     	}
     	if (passingTrain == 0 && mq->size != 0) { /*if there is no train ont the critical railway*/
@@ -65,23 +67,23 @@ void exitManager(int num) {
         exit(-1);
     }
     */
-    removeQueue(&A1msg);
-    removeQueue(&A2msg);
-    removeQueue(&Tmsg);
+    removeQueue(&A1MSG);
+    removeQueue(&A2MSG);
+    removeQueue(&TMSG);
 
-    if((error = pthread_join(aiguillage1, NULL)) != 0) {
+    if((error = pthread_join(AIGUILLAGE1, NULL)) != 0) {
         fprintf(stderr, "Error while joining aiguillage1.\n");
         fprintf(stderr, "\tError %d: %s\n", error, strerror(error));
         exit(-1);
     }
 
-    if((error = pthread_join(aiguillage2, NULL)) != 0) {
+    if((error = pthread_join(AIGUILLAGE2, NULL)) != 0) {
         fprintf(stderr, "Error while joining aiguillage2.\n");
         fprintf(stderr, "\tError %d: %s\n", error, strerror(error));
         exit(-1);
     }
 
-    if((error = pthread_join(tunnel, NULL)) != 0) {
+    if((error = pthread_join(TUNNEL, NULL)) != 0) {
         fprintf(stderr, "Error while joining tunnel.\n");
         fprintf(stderr, "\tError %d: %s\n", error, strerror(error));
         exit(-1);
@@ -120,10 +122,10 @@ int initManager() {
     strcpy(a1.name, "AIGUILLAGE 1");
     a1.id = 1;
     a1.permissionFreq = 500000;
-    A1msg = initQueue();
-    a1.messageQueue = &A1msg;
+    A1MSG = initQueue();
+    a1.messageQueue = &A1MSG;
 
-    if((error = pthread_create(&aiguillage1, NULL, managerThread, (void*)&a1)) != 0) {
+    if((error = pthread_create(&AIGUILLAGE1, NULL, managerThread, (void*)&a1)) != 0) {
         fprintf(stderr, "Error while creating aiguillage1.\n");
         fprintf(stderr, "\tError %d: %s\n", error, strerror(error));
         return -1;
@@ -132,10 +134,10 @@ int initManager() {
     strcpy(a2.name, "AIGUILLAGE 2");
     a2.id = 2;
     a2.permissionFreq = 500000;
-    A2msg = initQueue();
-    a2.messageQueue = &A2msg;
+    A1MSG = initQueue();
+    a2.messageQueue = &A2MSG;
 
-    if((error = pthread_create(&aiguillage2, NULL, managerThread, (void*)&a2)) != 0) {
+    if((error = pthread_create(&AIGUILLAGE2, NULL, managerThread, (void*)&a2)) != 0) {
         fprintf(stderr, "Error while creating aiguillage2.\n");
         fprintf(stderr, "\tError %d: %s\n", error, strerror(error));
         return -1;
@@ -144,16 +146,16 @@ int initManager() {
     strcpy(t.name, "TUNNEL");
     t.id = 3;
     t.permissionFreq = 500000;
-    Tmsg = initQueue();
-    t.messageQueue = &Tmsg;
+    TMSG = initQueue();
+    t.messageQueue = &TMSG;
 
-    if((error = pthread_create(&tunnel, NULL, managerThread, (void*)&t)) != 0) {
+    if((error = pthread_create(&TUNNEL, NULL, managerThread, (void*)&t)) != 0) {
         fprintf(stderr, "Error while creating tunnel.\n");
         fprintf(stderr, "\tError %d: %s\n", error, strerror(error));
         return -1;
 	}
 
-	usleep(2000000);
+	sleep(2);
 
     return 0;
 }

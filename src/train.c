@@ -1,15 +1,11 @@
 #include "train.h"
 
-void SIGINThandle(int num) {
+void trainHandlerSIGINT(int num) {
 	int i;
 
 	for (i = 0; i < TRAIN_NBR; i++) {
     	pthread_kill(TRAINS[i], SIGTERM);
     }
-}
-
-void hand(int num) {
-	return;	
 }
 
 void* threadM(void* arg) {
@@ -20,34 +16,41 @@ void* threadM(void* arg) {
 	printf("%d : I am a M train.\n", self.id);
 
 	if (self.direction == DIR_WE) {
+
 		self.position = POS_VOIEA;
+
 		printf("%d : Informing AIGUILLAGE 1 of my arrival\n", self.id);
 		msg.dst = 1;
 		msg.type = MSG_REQUEST_FORCE;
 		msg.train = self;
 		msgsnd(TRAIN_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), 0);
-		usleep(1000000);
-		printf("%d : Arriving at AIGUILLAGE 1\n", self.id);
 
+        usleep(1000000);
+
+        printf("%d : Arriving at AIGUILLAGE 1\n", self.id);
 		self.position = POS_AIGUILLAGE1;
+
 		usleep(1000000);
 
 		self.position = POS_LIGNEM;
-		printf("%d : Informing AIGUILLAGE 1 that I passed AIGUILLAGE 1\n", self.id);
+        printf("%d : Informing AIGUILLAGE 1 that I passed AIGUILLAGE 1\n", self.id);
 		msg.dst = 1;
 		msg.type = MSG_NOTIFICATION;
 		msg.train = self;
 		msgsnd(TRAIN_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), 0);
-		usleep(1000000);
-		printf("%d : Informing TUNNEL that I would like to access TUNNEL (waiting for authorization)\n", self.id);
+
+        usleep(1000000);
+
+        printf("%d : Informing TUNNEL that I would like to access TUNNEL (waiting for authorization)\n", self.id);
 		msg.dst = 3;
 		msg.type = MSG_REQUEST;
 		msg.train = self;
 		msgsnd(TRAIN_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), 0);
-		msgrcv(TRAIN_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
-		printf("%d : recieved authorization from TUNNEL to pass the TUNNEL\n", self.id);
 
+        msgrcv(TRAIN_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
+		printf("%d : received authorization from TUNNEL to pass the TUNNEL\n", self.id);
 		self.position = POS_TUNNEL;
+
 		usleep(1000000);
 
 		self.position = POS_LIGNE;
@@ -56,7 +59,10 @@ void* threadM(void* arg) {
 		msg.dst = 3;
 		msg.type = MSG_NOTIFICATION;
 		msgsnd(TRAIN_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), 0);
-	}
+
+	} else if (self.direction == DIR_WE) {
+
+    }
 
 	pthread_exit(NULL);
 }
@@ -84,7 +90,7 @@ void initTrain(const char* file) {
 	TRAINS = (pthread_t*)malloc(sizeof(pthread_t)*10);
 
 	/* Handle interruption signal SIGINT */
-	signal(SIGINT, SIGINThandle);
+	signal(SIGINT, trainHandlerSIGINT);
 
 
     Parser p = initParser(file);
@@ -113,6 +119,12 @@ void initTrain(const char* file) {
 					TRAIN_NBR++;
 				}
 				break;
+            case TYPE_GL :
+                break;
+            case TYPE_TGV :
+                break;
+            default :
+                break;
 		}
 
 		usleep(1000000);

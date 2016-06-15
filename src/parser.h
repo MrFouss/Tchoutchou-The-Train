@@ -8,7 +8,7 @@
 #include "communication.h"
 
 typedef struct TrainEvent {
-	int startTime; /*second*/
+	int startTime; /* in microseconds */
 	TrainType type;
 	Direction direction;
 } TrainEvent;
