@@ -9,23 +9,7 @@
 #include <unistd.h>
 #include "train.h"
 #include "manager.h"
-
-/********************/
-/* GLOBAL VARIABLES */
-/********************/
-
-/* Parent process */
-pid_t PROGRAM;
-
-/* Children process PID */
-pid_t MANAGER, TRAIN;
-
-/* Inter-process message queue */
-int MSQID;
-
-/**************/
-/* PROTOTYPES */
-/**************/
+#include "communication.h"
 
 /**
  * Called when an error occurred

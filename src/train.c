@@ -23,7 +23,7 @@ void* threadM(void* arg) {
 		msg.dst = 1;
 		msg.type = MSG_REQUEST_FORCE;
 		msg.train = self;
-		msgsnd(TRAIN_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
 
         usleep(1000000);
 
@@ -37,7 +37,7 @@ void* threadM(void* arg) {
 		msg.dst = 1;
 		msg.type = MSG_NOTIFICATION;
 		msg.train = self;
-		msgsnd(TRAIN_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
 
         usleep(1000000);
 
@@ -45,9 +45,9 @@ void* threadM(void* arg) {
 		msg.dst = 3;
 		msg.type = MSG_REQUEST;
 		msg.train = self;
-		msgsnd(TRAIN_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
 
-        msgrcv(TRAIN_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
+        msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
 		printf("%d : received authorization from TUNNEL to pass the TUNNEL\n", self.id);
 		self.position = POS_TUNNEL;
 
@@ -58,7 +58,7 @@ void* threadM(void* arg) {
 		msg.train = self;
 		msg.dst = 3;
 		msg.type = MSG_NOTIFICATION;
-		msgsnd(TRAIN_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
 
 	} else if (self.direction == DIR_WE) {
 
@@ -138,7 +138,6 @@ void initTrain(const char* file) {
 }
 
 void processTrain(int msqid, const char* file) {
-	TRAIN_GLOBAL_MSQID = msqid;
 	initTrain(file);
 
 	exitTrain(0);

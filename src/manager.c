@@ -2,6 +2,10 @@
 
 void managerSIGINThandler(int num) {
     /* inform child process that they must finish their execution */
+    
+    /* leave time to manager threads to finish reading their message queue */
+    usleep(2000000);
+
     pthread_kill(AIGUILLAGE1, SIGTERM);
     pthread_kill(AIGUILLAGE2, SIGTERM);
     pthread_kill(TUNNEL, SIGTERM);
@@ -22,7 +26,7 @@ void* managerThread(void* arg) {
 
     while(1) {
     	usleep(permissionFreq);
-    	while (msgrcv(MANAGER_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), id, IPC_NOWAIT) != -1) {
+    	while (msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), id, IPC_NOWAIT) != -1) {
 	        switch (msg.type) {
 	            case MSG_REQUEST_FORCE :
 	                printf("%s : Recieved force request from train %li.\n", name, msg.src);
@@ -48,7 +52,7 @@ void* managerThread(void* arg) {
     		msg.src = id;
     		msg.type = MSG_PERMISSION;
     		printf("%s : Informing train %li that it can pass.\n", name, msg.dst);
-    		msgsnd(MANAGER_GLOBAL_MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+    		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
     	}
     }
 
@@ -141,8 +145,6 @@ int initManager() {
 }
 
 void processManager(int global_msqid) {
-	MANAGER_GLOBAL_MSQID = global_msqid;
-
 	if(initManager() == -1)
         fprintf(stderr, "Error during the initialization of the process manager.\n");
 

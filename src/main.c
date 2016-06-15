@@ -49,6 +49,7 @@ int main(const int argc, const char *argv[]) {
 		signal(SIGINT, handlerSIGINT);
 
         PROGRAM = getpid();
+        PENDING_MSG = 0;
 
 		if((MSQID = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0600)) == -1) {
 	        fprintf(stderr, "Error while creating the global message queue.\n");

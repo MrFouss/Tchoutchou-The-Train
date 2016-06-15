@@ -24,19 +24,6 @@ typedef struct ManagerThreadArg {
 	MessageList* messageList;
 } ManagerThreadArg;
 
-/********************/
-/* GLOBAL VARIABLES */
-/********************/
-
-/* manager threads, 1 per critial zone */
-pthread_t AIGUILLAGE1, AIGUILLAGE2, TUNNEL;
-
-/* global message queue id to communication with trains */
-int MANAGER_GLOBAL_MSQID;
-
-/* list of messages used by manager threads to store messages */
-MessageList A1MSG, A2MSG, TMSG;
-
 /**************/
 /* PROTOTYPES */
 /**************/

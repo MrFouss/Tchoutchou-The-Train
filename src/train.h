@@ -13,19 +13,6 @@
 #include "communication.h"
 #include "parser.h"
 
-/********************/
-/* GLOBAL VARIABLES */
-/********************/
-
-/* list of thrains */
-pthread_t* TRAINS;
-
-/* number of trains */
-int TRAIN_NBR;
-
-/* message queue used to communicate with manager */
-int TRAIN_GLOBAL_MSQID;
-
 /**************/
 /* PROTOTYPES */
 /**************/

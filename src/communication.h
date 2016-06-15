@@ -68,6 +68,38 @@ typedef struct MessageList {
 	int size;
 } MessageList;
 
+/********************/
+/* GLOBAL VARIABLES */
+/********************/
+
+/* Parent process */
+pid_t PROGRAM;
+
+/* Children process PID */
+pid_t MANAGER, TRAIN;
+
+/* Inter-process message queue */
+int MSQID;
+
+/* manager threads, 1 per critial zone */
+pthread_t AIGUILLAGE1, AIGUILLAGE2, TUNNEL;
+
+/* list of messages used by manager threads to store messages */
+MessageList A1MSG, A2MSG, TMSG;
+
+/* pending non read messages */
+int PENDING_MSG;
+
+/* list of thrains */
+pthread_t* TRAINS;
+
+/* number of trains */
+int TRAIN_NBR;
+
+/**************/
+/* PROTOTYPES */
+/**************/
+
 /**
  * Initialize an empty message list
  */
