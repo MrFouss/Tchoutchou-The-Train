@@ -4,8 +4,9 @@ project(TchouTchou-The-Train)
 set(SOURCE_FILES
         src/main.c
         src/manager.c
-        src/network.c
+        src/parser.c
         src/train.c
+        src/communication.c
 )
 
 set(GCC_COVERAGE_COMPILE_FLAGS "-W -Wall -ansi -pedantic")
