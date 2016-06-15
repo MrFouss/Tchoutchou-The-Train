@@ -12,6 +12,101 @@ void managerHandlerSIGINT(int num) {
     exitProgram();
 }
 
+bool canPassGarage(Train t) {
+    Direction dir = t.direction;
+    TrainType type = t.type;
+    Position pos = t.position;
+
+    if (dir == DIR_WE) { /* west to east */
+        if (pos == POS_VOIEA || pos == POS_VOIEC) { /* located west from garage */
+            if (type == TYPE_TGV && LIGNETGV_WE < 0) {
+                return false;
+            } else if (type == TYPE_GL && LIGNEGL_WE < 0) {
+                return false;
+            }
+        }
+    } else {
+        if (type == TYPE_TGV && LIGNETGV_WE > 0) {
+            return false;
+        } else if (type == TYPE_GL && LIGNEGL_WE > 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool canPassLigne(Train t) {
+    Direction dir = t.direction;
+    TrainType type = t.type;
+    Position pos = t.position;
+
+    if (dir == DIR_WE) { /* west to east */
+        if (LIGNE_WE < 0) {
+            return false;
+        }
+    } else {
+        if (pos == POS_LIGNE && LIGNE_WE > 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void setDirectionCounters(Train t) {
+    Direction dir = t.direction;
+    TrainType type = t.type;
+    Position pos = t.position;
+
+    if (dir == DIR_WE) { /* west to east */
+        if (pos == POS_VOIEA || pos == POS_VOIEC) { /* located west from garage */
+            if (type == TYPE_TGV) {
+                LIGNETGV_WE++;
+            } else if (type == TYPE_GL) {
+                LIGNEGL_WE++;
+            }
+            LIGNE_WE++;
+        }
+    } else {
+        if (pos == POS_LIGNE) {
+            LIGNE_WE--;
+        }
+        if (type == TYPE_TGV) {
+            LIGNETGV_WE--;
+        } else if (type == TYPE_GL) {
+            LIGNEGL_WE--;
+        }
+    }
+}
+
+void unsetDirectionCounters(Train t) {
+    Direction dir = t.direction;
+    TrainType type = t.type;
+    Position pos = t.position;
+
+    if (dir == DIR_WE) { /* west to east */
+        if (pos == POS_LIGNE) {
+            LIGNE_WE--;
+            if (type == TYPE_TGV) {
+                LIGNETGV_WE--;
+            } else if (type == TYPE_GL) {
+                LIGNEGL_WE--;
+            }
+        }
+    } else {
+        if (pos == POS_VOIEB || pos == POS_VOIED) {
+            if (type == TYPE_TGV) {
+                LIGNETGV_WE++;
+            } else if (type == TYPE_GL) {
+                LIGNEGL_WE++;
+            }
+        } else if (pos == POS_LIGNEM_EW || pos == POS_LIGNETGV || pos == POS_LIGNEGL) {
+            LIGNE_WE++;
+        }
+    }
+}
+
 void* managerThread(void* arg) {
 	char name[30]="";
     long permissionFreq = ((ManagerThreadArg*)arg)->permissionFreq;
@@ -24,6 +119,14 @@ void* managerThread(void* arg) {
 	strcpy(name, ((ManagerThreadArg*)arg)->name);
 
 	printf("%s : My id is %d.\n", name, id);
+
+    if (id == 2) {
+        printf("set train WE on ligne\n");
+        LIGNE_WE --;
+        usleep(4000000);
+        printf("unset train WE on ligne\n");
+        LIGNE_WE ++;
+    }
 
     while(1) {
     	usleep(permissionFreq);
@@ -39,6 +142,9 @@ void* managerThread(void* arg) {
 	                break;
 	            case MSG_NOTIFICATION :
 	            	printf("%s : Receive notification from %li.\n", name, msg.src);
+                    pthread_mutex_lock(&DIR_MUTEX);
+                    unsetDirectionCounters(msg.train);
+                    pthread_mutex_unlock(&DIR_MUTEX);
 	            	passingTrain--;
 	                break;
                 default :
@@ -46,17 +152,26 @@ void* managerThread(void* arg) {
 	        }
     	}
     	if (passingTrain == 0 && ml->size != 0) { /* if there is no train on the critical railway */
-            /* priority management : first lowest priority */
+            /* priority management : first lowest priority that can pass */
 
-            msg = poll(ml);
-            offer(ml, msg);
-    		for (i = 1; i < ml->size; i++) {
+            pthread_mutex_lock(&DIR_MUTEX);
+            msg.type = TYPE_M;
+    		for (i = 0; i < ml->size; i++) {
                 tmpMsg = poll(ml);
-                if (tmpMsg.type < msg.type) {
+                if (tmpMsg.type < msg.type && canPassGarage(tmpMsg.train) && canPassLigne(tmpMsg.train)) {
                     msg = tmpMsg;
                 }
                 offer(ml, tmpMsg);
             }
+
+            if (canPassGarage(msg.train) && canPassLigne(msg.train)) {
+                setDirectionCounters(msg.train);
+            }
+
+            pthread_mutex_unlock(&DIR_MUTEX);
+
+
+            /* put the list in its original chronologic order */
 
             for (i = 0; i < ml->size; i++) {
                 tmpMsg = poll(ml);
@@ -66,13 +181,14 @@ void* managerThread(void* arg) {
             }
 
             /* sending permission to selected train */
-
-    		passingTrain++;
-    		msg.dst = msg.src;
-    		msg.src = id;
-    		msg.type = MSG_PERMISSION;
-    		printf("%s : Send permission to %li.\n", name, msg.dst);
-    		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+        if (canPassGarage(msg.train) && canPassLigne(msg.train)) {
+            passingTrain++;
+            msg.dst = msg.src;
+            msg.src = id;
+            msg.type = MSG_PERMISSION;
+            printf("%s : Send permission to %li.\n", name, msg.dst);
+            msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+            }
     	}
     }
 
@@ -114,6 +230,11 @@ void exitManager(int num) {
 
 int initManager() {
     int error;
+
+    /* init counters */
+    LIGNETGV_WE = 0;
+    LIGNEGL_WE = 0;
+    LIGNE_WE = 0;
 
     /* handles interruption from SIGINT */
 	signal(SIGINT, managerHandlerSIGINT);

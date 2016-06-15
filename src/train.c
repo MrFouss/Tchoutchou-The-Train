@@ -16,6 +16,9 @@ void* threadMerchandise(void* arg) {
 	printf("%d : I am a M train.\n", self.id);
 
 	if (self.direction == DIR_WE) {
+		self.position = POS_VOIEA;
+		printf("%d : On VOIE A.\n", self.id);
+
 		printf("%d : Send request to AIGUILLAGE 1.\n", self.id);
 		msg.dst = 1;
 		msg.type = MSG_REQUEST;
@@ -24,9 +27,6 @@ void* threadMerchandise(void* arg) {
 
 		msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
 		printf("%d : Receive permission from AIGUILLAGE 1.\n", self.id);
-		
-		self.position = POS_VOIEA;
-		printf("%d : On VOIE A.\n", self.id);
 
         usleep(1000000);
 
@@ -74,6 +74,9 @@ void* threadMerchandise(void* arg) {
 
 		usleep(1000000);
 	} else {
+		self.position = POS_LIGNE;
+		printf("%d : On LIGNE.\n", self.id);
+
 		printf("%d : Send request to TUNNEL.\n", self.id);
 		msg.dst = 3;
 		msg.type = MSG_REQUEST;
@@ -82,9 +85,6 @@ void* threadMerchandise(void* arg) {
 
 		msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
 		printf("%d : Receive permission from TUNNEL.\n", self.id);
-		
-		self.position = POS_LIGNE;
-		printf("%d : On LIGNE.\n", self.id);
 
         usleep(1000000);
 
