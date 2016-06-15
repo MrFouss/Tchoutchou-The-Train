@@ -67,6 +67,134 @@ void* threadM(void* arg) {
 	pthread_exit(NULL);
 }
 
+void* threadGL(void* arg) {
+	Train self = *(Train*)arg;
+	Message msg;
+	msg.src = self.id;
+
+	printf("%d : I am a GL train.\n", self.id);
+
+	if (self.direction == DIR_WE) {
+
+		self.position = POS_VOIEC;
+
+        usleep(3000000);
+
+		printf("%d : Informing AIGUILLAGE 2 that I would like to access it (waiting for authorization)\n", self.id);
+		msg.dst = 1;
+		msg.type = MSG_REQUEST;
+		msg.train = self;
+		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+
+        msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
+        printf("%d : received authorization from AIGUILLAGE 2 to access it\n", self.id);
+
+		usleep(1000000);
+
+		printf("%d : Arriving at AIGUILLAGE 2\n", self.id);
+        self.position = POS_AIGUILLAGE2;
+
+		usleep(1000000);
+
+		self.position = POS_LIGNEGL;
+		printf("%d : Informing AIGUILLAGE 2 that I passed it\n", self.id);
+		msg.dst = 1;
+		msg.type = MSG_NOTIFICATION;
+		msg.train = self;
+		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+
+		usleep(1000000);
+
+		printf("%d : Informing TUNNEL that I would like to access it (waiting for authorization)\n", self.id);
+		msg.dst = 3;
+		msg.type = MSG_REQUEST;
+		msg.train = self;
+		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+
+		msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
+		printf("%d : received authorization from TUNNEL to pass the TUNNEL\n", self.id);
+		self.position = POS_TUNNEL;
+
+		usleep(1000000);
+
+		self.position = POS_LIGNE;
+		printf("%d : Inform TUNNEL I passed the TUNNEL\n", self.id);
+		msg.train = self;
+		msg.dst = 3;
+		msg.type = MSG_NOTIFICATION;
+		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+
+	} else if (self.direction == DIR_WE) {
+
+	}
+
+	pthread_exit(NULL);
+}
+
+void* threadTGV(void* arg) {
+    Train self = *(Train*)arg;
+    Message msg;
+    msg.src = self.id;
+
+    printf("%d : I am a TGV train.\n", self.id);
+
+    if (self.direction == DIR_WE) {
+
+        self.position = POS_VOIEC;
+
+        usleep(5000000);
+
+        printf("%d : Informing AIGUILLAGE 2 that I would like to access it (waiting for authorization)\n", self.id);
+        msg.dst = 1;
+        msg.type = MSG_REQUEST;
+        msg.train = self;
+        msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+
+        msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
+        printf("%d : received authorization from AIGUILLAGE 2 to access it\n", self.id);
+
+        usleep(800000);
+
+        printf("%d : Arriving at AIGUILLAGE 2\n", self.id);
+        self.position = POS_AIGUILLAGE2;
+
+        usleep(800000);
+
+        self.position = POS_LIGNETGV;
+        printf("%d : Informing AIGUILLAGE 2 that I passed it\n", self.id);
+        msg.dst = 1;
+        msg.type = MSG_NOTIFICATION;
+        msg.train = self;
+        msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+
+        usleep(800000);
+
+        printf("%d : Informing TUNNEL that I would like to access it (waiting for authorization)\n", self.id);
+        msg.dst = 3;
+        msg.type = MSG_REQUEST;
+        msg.train = self;
+        msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+
+        msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
+        printf("%d : received authorization from TUNNEL to pass the TUNNEL\n", self.id);
+        self.position = POS_TUNNEL;
+
+        usleep(800000);
+
+        self.position = POS_LIGNE;
+        printf("%d : Inform TUNNEL I passed the TUNNEL\n", self.id);
+        msg.train = self;
+        msg.dst = 3;
+        msg.type = MSG_NOTIFICATION;
+        msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+
+    } else if (self.direction == DIR_WE) {
+
+    }
+
+    pthread_exit(NULL);
+}
+
 void exitTrain(int num) {
 	/* Join all 4 manager threads */
     int i;
@@ -125,14 +253,28 @@ void initTrain(const char* file) {
 				}
 				break;
             case TYPE_GL :
+                if((error = pthread_create(&tr, NULL, threadGL, (void*)&t)) != 0) {
+                    fprintf(stderr, "Error while creating GL train thread.\n");
+                    fprintf(stderr, "\tError %d: %s\n", error, strerror(error));
+                } else {
+                    TRAINS[TRAIN_NBR] = tr;
+                    TRAIN_NBR++;
+                }
                 break;
             case TYPE_TGV :
+                if((error = pthread_create(&tr, NULL, threadTGV, (void*)&t)) != 0) {
+                    fprintf(stderr, "Error while creating TGV train thread.\n");
+                    fprintf(stderr, "\tError %d: %s\n", error, strerror(error));
+                } else {
+                    TRAINS[TRAIN_NBR] = tr;
+                    TRAIN_NBR++;
+                }
                 break;
             default :
                 break;
 		}
 
-		/* wait 1 sencond to be sure the thread had time to copy its argument */
+		/* wait 1 second to be sure the thread had time to copy its argument */
 		usleep(1000000);
 	}
 }

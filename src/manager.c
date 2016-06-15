@@ -29,23 +29,23 @@ void* managerThread(void* arg) {
     	while (msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), id, IPC_NOWAIT) != -1) {
 	        switch (msg.type) {
 	            case MSG_REQUEST_FORCE :
-	                printf("%s : Recieved force request from train %li.\n", name, msg.src);
+	                printf("%s : Received force request from train %li.\n", name, msg.src);
 	                passingTrain++;
 	                break;
 	            case MSG_REQUEST :
-	                printf("%s : Recieved request from train %li.\n", name, msg.src);
-	                offer(mq, msg); /*store request in message queue*/
+	                printf("%s : Received request from train %li.\n", name, msg.src);
+	                offer(mq, msg); /* store request in message queue */
 	                break;
 	            case MSG_NOTIFICATION :
-	            	printf("%s : Recieved notification from train %li.\n", name, msg.src);
+	            	printf("%s : Received notification from train %li.\n", name, msg.src);
 	            	passingTrain--;
 	                break;
                 default :
                     fprintf(stderr, "Error: you're not supposed to go there");
 	        }
     	}
-    	if (passingTrain == 0 && mq->size != 0) { /*if there is no train ont the critical railway*/
-    		/*TODO : manage a priority*/
+    	if (passingTrain == 0 && mq->size != 0) { /* if there is no train on the critical railway */
+    		/* TODO manage a priority */
     		passingTrain++;
     		msg = poll(mq);
     		msg.dst = msg.src;
