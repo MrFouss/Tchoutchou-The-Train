@@ -1,3 +1,4 @@
+#include <signal.h>
 #include "main.h"
 
 /**
@@ -48,8 +49,7 @@ int main(const int argc, const char *argv[]) {
 
         PROGRAM = getpid();
 
-		/* TODO init queue */
-		if((MSQID = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0640)) == -1) {
+		if((MSQID = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0600)) == -1) {
 	        fprintf(stderr, "Error while creating the global message queue.\n");
 	        fprintf(stderr, "\tError %d: %s\n", errno, strerror(errno));
 	        return -1;
