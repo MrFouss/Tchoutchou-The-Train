@@ -12,99 +12,206 @@ void managerHandlerSIGINT(int num) {
     exitProgram();
 }
 
-bool canPassGarage(Train t) {
+bool canPassAiguillage(Train t) {
     Direction dir = t.direction;
     TrainType type = t.type;
-    Position pos = t.position;
 
-    if (dir == DIR_WE) { /* west to east */
-        if (pos == POS_VOIEA || pos == POS_VOIEC) { /* located west from garage */
-            if (type == TYPE_TGV && LIGNETGV_WE < 0) {
-                return false;
-            } else if (type == TYPE_GL && LIGNEGL_WE < 0) {
-                return false;
-            }
+    if(dir == DIR_WE) { /* west to east */
+        switch(type) {
+            case TYPE_TGV:
+                if(CMP_AIGUILLAGE_2 >= 0 && CMP_LIGNE_TGV >= 0) {
+                    CMP_AIGUILLAGE_2++;
+                    CMP_LIGNE_TGV++;
+                    return true;
+                }
+                break;
+            case TYPE_GL:
+                if(CMP_AIGUILLAGE_2 >= 0 && CMP_LIGNE_GL >= 0) {
+                    CMP_AIGUILLAGE_2++;
+                    CMP_LIGNE_GL++;
+                    return true;
+                }
+                break;
+            case TYPE_M:
+                if(CMP_AIGUILLAGE_1 >= 0) {
+                    CMP_AIGUILLAGE_1++;
+                    return true;
+                }
+                break;
         }
     } else {
-        if (type == TYPE_TGV && LIGNETGV_WE > 0) {
-            return false;
-        } else if (type == TYPE_GL && LIGNEGL_WE > 0) {
-            return false;
+        switch(type) {
+            case TYPE_TGV:
+                if(CMP_AIGUILLAGE_2 <= 0) {
+                    CMP_AIGUILLAGE_2--;
+                    CMP_LIGNE_TGV++;
+                    return true;
+                }
+                break;
+            case TYPE_GL:
+                if(CMP_AIGUILLAGE_2 <= 0) {
+                    CMP_AIGUILLAGE_2--;
+                    CMP_LIGNE_GL++;
+                    return true;
+                }
+                break;
+            case TYPE_M:
+                if(CMP_AIGUILLAGE_1 <= 0) {
+                    CMP_AIGUILLAGE_1--;
+                    return true;
+                }
+                break;
         }
     }
 
-    return true;
+    return false;
 }
 
-bool canPassLigne(Train t) {
+bool canPassTunnel(Train t) {
+
     Direction dir = t.direction;
     TrainType type = t.type;
-    Position pos = t.position;
 
-    if (dir == DIR_WE) { /* west to east */
-        if (LIGNE_WE < 0) {
-            return false;
+    if(dir == DIR_WE) { /* west to east */
+        if(CMP_TUNNEL >= 0) {
+            CMP_TUNNEL++;
+            switch(type) {
+                case TYPE_TGV:
+                    CMP_LIGNE_TGV--;
+                    break;
+                case TYPE_GL:
+                    CMP_LIGNE_GL--;
+                    break;
+                default:
+                    break;
+            }
+            return true;
         }
     } else {
-        if (pos == POS_LIGNE && LIGNE_WE > 0) {
-            return false;
+        if(CMP_TUNNEL <= 0) {
+            CMP_TUNNEL--;
+            switch(type) {
+                case TYPE_TGV:
+                    if(CMP_LIGNE_TGV <= 0)
+                        CMP_LIGNE_TGV--;
+                    break;
+                case TYPE_GL:
+                    if(CMP_LIGNE_GL <= 0)
+                        CMP_LIGNE_GL--;
+                    break;
+                default:
+                    break;
+            }
+            return true;
         }
     }
 
-    return true;
+    return false;
 }
 
-void setDirectionCounters(Train t) {
-    Direction dir = t.direction;
-    TrainType type = t.type;
-    Position pos = t.position;
+void sendPermission(MessageType type, Message* msg) {
+    int dst = msg->dst;
+    msg->dst = msg->src;
+    msg->type = type;
+    msg->src = dst;
+    msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+}
 
-    if (dir == DIR_WE) { /* west to east */
-        if (pos == POS_VOIEA || pos == POS_VOIEC) { /* located west from garage */
-            if (type == TYPE_TGV) {
-                LIGNETGV_WE++;
-            } else if (type == TYPE_GL) {
-                LIGNEGL_WE++;
+void resolveRequest(char* name, MessageList* ml) {
+    int i;
+    bool solved;
+    Message msg;
+
+    for (i = 0; i < ml->size; i++) {
+        solved = false;
+        msg = poll(ml);
+        if(msg.train.type == TYPE_TGV) {
+            if(msg.dst == ID_TUNNEL) {
+                if(canPassTunnel(msg.train)) {
+                    printf("%s : Sending permission to TGV %d.\n", name, msg.dst);
+                    sendPermission(MSG_PERMISSION, &msg);
+                    solved = true;
+                }
+            } else {
+                if(canPassAiguillage(msg.train)) {
+                    printf("%s : Sending permission to TGV %d.\n", name, msg.dst);
+                    sendPermission(MSG_PERMISSION, &msg);
+                    solved = true;
+                }
             }
-            LIGNE_WE++;
         }
-    } else {
-        if (pos == POS_LIGNE) {
-            LIGNE_WE--;
+        if(solved == false)
+            offer(ml, msg);
+    }
+
+    for (i = 0; i < ml->size; i++) {
+        solved = false;
+        msg = poll(ml);
+        if(msg.train.type == TYPE_GL) {
+            if(msg.dst == ID_TUNNEL) {
+                if(canPassTunnel(msg.train)) {
+                    printf("%s : Sending permission to GL %d.\n", name, msg.dst);
+                    sendPermission(MSG_PERMISSION, &msg);
+                    solved = true;
+                }
+            } else {
+                if(canPassAiguillage(msg.train)) {
+                    printf("%s : Sending permission to GL %d.\n", name, msg.dst);
+                    sendPermission(MSG_PERMISSION, &msg);
+                    solved = true;
+                }
+            }
         }
-        if (type == TYPE_TGV) {
-            LIGNETGV_WE--;
-        } else if (type == TYPE_GL) {
-            LIGNEGL_WE--;
+        if(solved == false)
+            offer(ml, msg);
+    }
+
+    for (i = 0; i < ml->size; i++) {
+        solved = false;
+        msg = poll(ml);
+        if(msg.train.type == TYPE_M) {
+            if(msg.dst == ID_TUNNEL) {
+                if(canPassTunnel(msg.train)) {
+                    printf("%s : Sending permission to M %d.\n", name, msg.dst);
+                    sendPermission(MSG_PERMISSION, &msg);
+                    solved = true;
+                }
+            } else {
+                if(canPassAiguillage(msg.train)) {
+                    printf("%s : Sending permission to M %d.\n", name, msg.dst);
+                    sendPermission(MSG_PERMISSION, &msg);
+                    solved = true;
+                }
+            }
         }
+        if(solved == false)
+            offer(ml, msg);
     }
 }
 
-void unsetDirectionCounters(Train t) {
-    Direction dir = t.direction;
-    TrainType type = t.type;
-    Position pos = t.position;
+void resolveNotification(Message msg) {
+    pthread_mutex_lock(&MUTEX_COUNT);
+    int modif;
+    if(msg.train.direction == DIR_WE)
+        modif = 1;
+    else
+        modif = -1;
 
-    if (dir == DIR_WE) { /* west to east */
-        if (pos == POS_LIGNE) {
-            LIGNE_WE--;
-            if (type == TYPE_TGV) {
-                LIGNETGV_WE--;
-            } else if (type == TYPE_GL) {
-                LIGNEGL_WE--;
-            }
-        }
-    } else {
-        if (pos == POS_VOIEB || pos == POS_VOIED) {
-            if (type == TYPE_TGV) {
-                LIGNETGV_WE++;
-            } else if (type == TYPE_GL) {
-                LIGNEGL_WE++;
-            }
-        } else if (pos == POS_LIGNEM_EW || pos == POS_LIGNETGV || pos == POS_LIGNEGL) {
-            LIGNE_WE++;
-        }
+    pthread_mutex_lock(&MUTEX_COUNT);
+    switch(msg.dst) {
+        case ID_AIGUILLAGE_1:
+            CMP_AIGUILLAGE_1 -= modif;
+            break;
+        case ID_AIGUILLAGE_2:
+            CMP_AIGUILLAGE_2 -= modif;
+            break;
+        case ID_TUNNEL:
+            CMP_TUNNEL -= modif;
+            break;
+        default:
+            break;
     }
+    pthread_mutex_lock(&MUTEX_COUNT);
 }
 
 void* managerThread(void* arg) {
@@ -112,92 +219,36 @@ void* managerThread(void* arg) {
     long permissionFreq = ((ManagerThreadArg*)arg)->permissionFreq;
     int id = ((ManagerThreadArg*)arg)->id;
     int i;
-    Message msg, tmpMsg;
+    Message msg;
     MessageList* ml = ((ManagerThreadArg*)arg)->messageList;
-    int passingTrain = 0;
 
 	strcpy(name, ((ManagerThreadArg*)arg)->name);
 
 	printf("%s : My id is %d.\n", name, id);
 
-    if (id == 2) {
-        printf("set train WE on ligne\n");
-        LIGNE_WE --;
-        usleep(4000000);
-        printf("unset train WE on ligne\n");
-        LIGNE_WE ++;
-    }
-
     while(1) {
     	usleep(permissionFreq);
     	while (msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), id, IPC_NOWAIT) != -1) {
 	        switch (msg.type) {
-	            case MSG_REQUEST_FORCE :
-	                printf("%s : Receive force request from train %li.\n", name, msg.src);
-	                passingTrain++;
-	                break;
 	            case MSG_REQUEST :
-	                printf("%s : Receive request from %li.\n", name, msg.src);
+	                printf("%s : Request received from %d.\n", name, msg.src);
 	                offer(ml, msg); /* store request in message queue */
 	                break;
 	            case MSG_NOTIFICATION :
-	            	printf("%s : Receive notification from %li.\n", name, msg.src);
-                    pthread_mutex_lock(&DIR_MUTEX);
-                    unsetDirectionCounters(msg.train);
-                    pthread_mutex_unlock(&DIR_MUTEX);
-	            	passingTrain--;
+	            	printf("%s : Notification received from %d.\n", name, msg.src);
+                    resolveNotification(msg);
 	                break;
                 default :
                     fprintf(stderr, "Error: you're not supposed to go there");
 	        }
     	}
-    	if (passingTrain == 0 && ml->size != 0) { /* if there is no train on the critical railway */
-            /* priority management : first lowest priority that can pass */
 
-            pthread_mutex_lock(&DIR_MUTEX);
-            msg.type = TYPE_M;
-    		for (i = 0; i < ml->size; i++) {
-                tmpMsg = poll(ml);
-                if (tmpMsg.type < msg.type && canPassGarage(tmpMsg.train) && canPassLigne(tmpMsg.train)) {
-                    msg = tmpMsg;
-                }
-                offer(ml, tmpMsg);
-            }
-
-            if (canPassGarage(msg.train) && canPassLigne(msg.train)) {
-                setDirectionCounters(msg.train);
-            }
-
-            pthread_mutex_unlock(&DIR_MUTEX);
-
-
-            /* put the list in its original chronologic order */
-
-            for (i = 0; i < ml->size; i++) {
-                tmpMsg = poll(ml);
-                if (msg.src != tmpMsg.src) {
-                    offer(ml, tmpMsg);
-                }
-            }
-
-            /* sending permission to selected train */
-        if (canPassGarage(msg.train) && canPassLigne(msg.train)) {
-            passingTrain++;
-            msg.dst = msg.src;
-            msg.src = id;
-            msg.type = MSG_PERMISSION;
-            printf("%s : Send permission to %li.\n", name, msg.dst);
-            msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
-            }
-    	}
+    	if(ml->size != 0) /* if there are messages to read */
+    		resolveRequest(name, ml);
     }
-
-	pthread_exit(NULL);
 }
 
 void exitManager(int num) {
-
-    /* Join all 4 manager threads */
     int error;
 
     /* free memory allocated by message lists*/
@@ -205,7 +256,7 @@ void exitManager(int num) {
     removeList(&A2MSG);
     removeList(&TMSG);
 
-    /*join threads*/
+    /* join threads */
 
     if((error = pthread_join(AIGUILLAGE1, NULL)) != 0) {
         fprintf(stderr, "Error while joining aiguillage1.\n");
@@ -231,44 +282,56 @@ void exitManager(int num) {
 int initManager() {
     int error;
 
-    /* init counters */
-    LIGNETGV_WE = 0;
-    LIGNEGL_WE = 0;
-    LIGNE_WE = 0;
+    /* init argument passed to manager threads */
+    ManagerThreadArg a1, a2, t;
+
+    /* initialize mutex for counters */
+    pthread_mutex_init(&MUTEX_COUNT, NULL);
+
+    /* initialize mutex for all five counters */
+    pthread_mutex_lock(&MUTEX_COUNT);
+    CMP_AIGUILLAGE_1 = 0;
+    CMP_AIGUILLAGE_2 = 0;
+    CMP_TUNNEL = 0;
+    CMP_LIGNE_GL = 0;
+    CMP_LIGNE_TGV = 0;
+    pthread_mutex_unlock(&MUTEX_COUNT);
 
     /* handles interruption from SIGINT */
 	signal(SIGINT, managerHandlerSIGINT);
 
-    /* Create all 4 manager threads */
+    /* creation of AIGUILLAGE 2 thread */
 
-    /* init argument passed to manager threads*/
-    ManagerThreadArg a1, a2, t;
     strcpy(a1.name, "AIGUILLAGE 1");
-    a1.id = 1;
+    a1.id = ID_AIGUILLAGE_1;
     a1.permissionFreq = 500000;
     A1MSG = initList();
     a1.messageList = &A1MSG;
 
     if((error = pthread_create(&AIGUILLAGE1, NULL, managerThread, (void*)&a1)) != 0) {
-        fprintf(stderr, "Error while creating aiguillage1.\n");
+        fprintf(stderr, "Error while creating AIGUILLAGE 1.\n");
         fprintf(stderr, "\tError %d: %s\n", error, strerror(error));
         return -1;
     }
 
+    /* creation of AIGUILLAGE 2 thread */
+
     strcpy(a2.name, "AIGUILLAGE 2");
-    a2.id = 2;
+    a2.id = ID_AIGUILLAGE_2;
     a2.permissionFreq = 500000;
     A1MSG = initList();
     a2.messageList = &A2MSG;
 
     if((error = pthread_create(&AIGUILLAGE2, NULL, managerThread, (void*)&a2)) != 0) {
-        fprintf(stderr, "Error while creating aiguillage2.\n");
+        fprintf(stderr, "Error while creating AIGUILLAGE 2.\n");
         fprintf(stderr, "\tError %d: %s\n", error, strerror(error));
         return -1;
     }
 
+    /* creation of TUNNEL thread */
+
     strcpy(t.name, "TUNNEL");
-    t.id = 3;
+    t.id = ID_TUNNEL;
     t.permissionFreq = 500000;
     TMSG = initList();
     t.messageList = &TMSG;
@@ -279,13 +342,13 @@ int initManager() {
         return -1;
 	}
 
-    /* wait 2 s to be sure that threads had time to make a copy of their thread argument*/
-	usleep(2000000);
+    /* wait 1s to be sure that threads had time to make a copy of their thread argument*/
+	usleep(1000000);
 
     return 0;
 }
 
-void processManager(int global_msqid) {
+void processManager() {
 	if(initManager() == -1)
         fprintf(stderr, "Error during the initialization of the process manager.\n");
 

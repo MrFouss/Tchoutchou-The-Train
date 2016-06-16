@@ -8,129 +8,116 @@ void trainHandlerSIGINT(int num) {
     }
 }
 
+void sendMessage(MessageType type, Message* msg, int dst, Train train) {
+	msg->dst = dst;
+	msg->type = type;
+	msg->train = train;
+	msg->src = train.id;
+	msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+}
+
 void* threadMerchandise(void* arg) {
+	int waitingTime = 1000000;
 	Train self = *(Train*)arg;
 	Message msg;
 	msg.src = self.id;
 
-	printf("%d : I am a M train.\n", self.id);
+	printf("M %d: I am a M train.\n", self.id);
 
 	if (self.direction == DIR_WE) {
-		self.position = POS_VOIEA;
-		printf("%d : On VOIE A.\n", self.id);
 
-		printf("%d : Send request to AIGUILLAGE 1.\n", self.id);
-		msg.dst = 1;
-		msg.type = MSG_REQUEST;
-		msg.train = self;
-		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+		self.position = POS_VOIE_A;
+		printf("M %d: Currently on VOIE A.\n", self.id);
+
+        usleep(waitingTime);
+
+		printf("M %d: Sending request to cross AIGUILLAGE 1.\n", self.id);
+		sendMessage(MSG_REQUEST, &msg, ID_AIGUILLAGE_1, self);
 
 		msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
-		printf("%d : Receive permission from AIGUILLAGE 1.\n", self.id);
+		printf("M %d: Permission from AIGUILLAGE 1 received.\n", self.id);
 
-        usleep(1000000);
+		self.position = POS_AIGUILLAGE_1;
+        printf("M %d: Currently on AIGUILLAGE 1.\n", self.id);
 
-		self.position = POS_AIGUILLAGE1;
-        printf("%d : On AIGUILLAGE 1.\n", self.id);
+		usleep(waitingTime);
 
-		usleep(1000000);
+        self.position = POS_LIGNE_M_WE;
+		printf("M %d: Currently on LIGNE M (W->E).\n", self.id);
 
-        self.position = POS_LIGNEM_WE;
-		printf("%d : On LIGNE M(W->E).\n", self.id);
-		
-        printf("%d : Send notification to AIGUILLAGE 1.\n", self.id);
-		msg.dst = 1;
-		msg.type = MSG_NOTIFICATION;
-		msg.train = self;
-		msg.src = self.id;
-		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+        printf("M %d: Sending notification to AIGUILLAGE 1.\n", self.id);
+		sendMessage(MSG_NOTIFICATION, &msg, ID_AIGUILLAGE_1, self);
 
-        usleep(1000000);
+        usleep(waitingTime);
 
-        printf("%d : Send request to TUNNEL.\n", self.id);
-		msg.dst = 3;
-		msg.type = MSG_REQUEST;
-		msg.train = self;
-		msg.src = self.id;
-		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+        printf("M %d: Sending request to cross TUNNEL.\n", self.id);
+		sendMessage(MSG_REQUEST, &msg, ID_TUNNEL, self);
 
         msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
-		printf("%d : Receive permission from TUNNEL.\n", self.id);
-		
-		self.position = POS_TUNNEL;
-        printf("%d : In TUNNEL.\n", self.id);
+		printf("M %d: Permission from TUNNEL received.\n", self.id);
 
-		usleep(1000000);
+		self.position = POS_TUNNEL;
+        printf("M %d: Currently in TUNNEL.\n", self.id);
+
+		usleep(waitingTime);
 
 		self.position = POS_LIGNE;
-        printf("%d : On LIGNE.\n", self.id);
+        printf("M %d: Currently on LIGNE.\n", self.id);
 
-		printf("%d : Send notification to TUNNEL.\n", self.id);
-		msg.train = self;
-		msg.dst = 3;
-		msg.type = MSG_NOTIFICATION;
-		msg.src = self.id;
-		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+		usleep(waitingTime);
 
-		usleep(1000000);
+		printf("M %d: Sending notification to TUNNEL.\n", self.id);
+		sendMessage(MSG_NOTIFICATION, &msg, ID_TUNNEL, self);
+
+		printf("M %d: W->E traversal over. Success!\n", self.id);
+
 	} else {
-		self.position = POS_LIGNE;
-		printf("%d : On LIGNE.\n", self.id);
 
-		printf("%d : Send request to TUNNEL.\n", self.id);
-		msg.dst = 3;
-		msg.type = MSG_REQUEST;
-		msg.train = self;
-		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+		printf("M %d: Sending request to access LIGNE and cross TUNNEL.\n", self.id);
+		sendMessage(MSG_REQUEST, &msg, ID_TUNNEL, self);
 
 		msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
-		printf("%d : Receive permission from TUNNEL.\n", self.id);
+		printf("M %d: Permission from TUNNEL received.\n", self.id);
 
-        usleep(1000000);
+		self.position = POS_LIGNE;
+		printf("M %d: Currently on LIGNE.\n", self.id);
+
+        usleep(waitingTime);
 
 		self.position = POS_TUNNEL;
-        printf("%d : In TUNNEL.\n", self.id);
+        printf("M %d: Currently in TUNNEL.\n", self.id);
 
-		usleep(1000000);
+		usleep(waitingTime);
 
-        self.position = POS_LIGNEM_EW;
-		printf("%d : On LIGNE M (E->W).\n", self.id);
+        self.position = POS_LIGNE_M_EW;
+		printf("M %d: Currently on LIGNE M (E->W).\n", self.id);
 
-		printf("%d : Send notification to TUNNEL.\n", self.id);
-		msg.train = self;
-		msg.dst = 3;
-		msg.type = MSG_NOTIFICATION;
-		msg.src = self.id;
-		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+		printf("M %d: Sending notification to TUNNEL.\n", self.id);
+		sendMessage(MSG_NOTIFICATION, &msg, ID_TUNNEL, self);
 		
-		usleep(1000000);
+		usleep(waitingTime);
 
-        printf("%d : Send request to AIGUILLAGE 1.\n", self.id);
-		msg.dst = 1;
-		msg.type = MSG_REQUEST;
-		msg.train = self;
-		msg.src = self.id;
-		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+        printf("M %d: Sending request to cross AIGUILLAGE 1.\n", self.id);
+		sendMessage(MSG_REQUEST, &msg, ID_AIGUILLAGE_1, self);
+
 
         msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
-		printf("%d : Receive permission from AIGUILLAGE 1.\n", self.id);
-		
-		self.position = POS_AIGUILLAGE1;
-        printf("%d : On AIGUILLAGE 1.\n", self.id);
+		printf("M %d: Permission from AIGUILLAGE 1 received.\n", self.id);
 
-		usleep(1000000);
+		self.position = POS_AIGUILLAGE_1;
+        printf("M %d: Currently on AIGUILLAGE 1.\n", self.id);
 
-		self.position = POS_VOIEB;
-        printf("%d : On VOIE B.\n", self.id);
+		usleep(waitingTime);
 
-		printf("%d : Send notification to AIGUILLAGE 1.\n", self.id);
-		msg.train = self;
-		msg.dst = 1;
-		msg.type = MSG_NOTIFICATION;
-		msg.src = self.id;
-		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+		self.position = POS_VOIE_B;
+        printf("M %d: Currently on VOIE B.\n", self.id);
 
-		usleep(1000000);
+		printf("M %d: Sending notification to AIGUILLAGE 1.\n", self.id);
+		sendMessage(MSG_NOTIFICATION, &msg, ID_AIGUILLAGE_1, self);
+
+		usleep(waitingTime);
+
+		printf("M %d: E->W traversal over. Success!\n", self.id);
     }
 
 	pthread_exit(NULL);
@@ -138,134 +125,140 @@ void* threadMerchandise(void* arg) {
 
 void* threadPassenger(void* arg) {
 	Train self = *(Train*)arg;
+	int waitingTime;
+	char* typeString;
 	Message msg;
 	msg.src = self.id;
 
 	if (self.type == TYPE_TGV) {
-		printf("%d : I am a TGV train.\n", self.id);
-	} else {
-		printf("%d : I am a GL train.\n", self.id);
+		typeString = "TGV";
+		waitingTime = 1000000;
 	}
-	
+	else {
+		typeString = "GL";
+		waitingTime = 1000000;
+	}
+
+	printf("%s %d : I am a %s train.\n", typeString, self.id, typeString);
+
 	if (self.direction == DIR_WE) {
 
-		self.position = POS_VOIEC;
+		self.position = POS_VOIE_C;
+		printf("%s %d: Currently on VOIE C.\n", typeString, self.id);
 
-        usleep(3000000);
+		usleep(5000000);
 
-		printf("%d : Informing AIGUILLAGE 2 that I would like to access it (waiting for authorization)\n", self.id);
-		msg.dst = 2;
-		msg.type = MSG_REQUEST;
-		msg.train = self;
-		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
-
-        msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
-        printf("%d : received authorization from AIGUILLAGE 2 to access it\n", self.id);
-
-		usleep(1000000);
-
-		printf("%d : Arriving at AIGUILLAGE 2\n", self.id);
-        self.position = POS_AIGUILLAGE2;
-
-		usleep(1000000);
-
-		if (self.type == TYPE_TGV) {
-			self.position = POS_LIGNETGV;
-		} else {
-			self.position = POS_LIGNEGL;
-		}
-
-		printf("%d : Informing AIGUILLAGE 2 that I passed it\n", self.id);
-		msg.dst = 2;
-		msg.type = MSG_NOTIFICATION;
-		msg.train = self;
-		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
-
-		usleep(1000000);
-
-		printf("%d : Informing TUNNEL that I would like to access it (waiting for authorization)\n", self.id);
-		msg.dst = 3;
-		msg.type = MSG_REQUEST;
-		msg.train = self;
-		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+		printf("%s %d: Sending request to cross AIGUILLAGE 2.\n", typeString, self.id);
+		sendMessage(MSG_REQUEST, &msg, ID_AIGUILLAGE_2, self);
 
 		msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
-		printf("%d : received authorization from TUNNEL to pass the TUNNEL\n", self.id);
-		self.position = POS_TUNNEL;
+		printf("%s %d: Permission from AIGUILLAGE 2 received.\n", typeString, self.id);
 
-		usleep(1000000);
+		usleep(waitingTime);
+
+		self.position = POS_AIGUILLAGE_2;
+		printf("%s %d: Currently on AIGUILLAGE 2.\n", typeString, self.id);
+
+		usleep(waitingTime);
+
+		if(self.type == TYPE_TGV) {
+			self.position = POS_LIGNE_TGV;
+			printf("%s %d: Currently on LIGNE TGV.\n", typeString, self.id);
+		} else {
+			self.position = POS_LIGNE_GL;
+			printf("%s %d: Currently on LIGNE GL.\n", typeString, self.id);
+		}
+
+		printf("%s %d: Sending notification to AIGUILLAGE 2.\n", typeString, self.id);
+		sendMessage(MSG_NOTIFICATION, &msg, ID_AIGUILLAGE_2, self);
+
+		usleep(waitingTime);
+
+		printf("%s %d: Sending request to cross TUNNEL.\n", typeString, self.id);
+		sendMessage(MSG_REQUEST, &msg, ID_TUNNEL, self);
+
+		msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
+		printf("%s %d: Permission from TUNNEL received.\n", typeString, self.id);
+
+		self.position = POS_TUNNEL;
+		printf("%s %d: Currently in TUNNEL.\n", typeString, self.id);
+
+		usleep(waitingTime);
 
 		self.position = POS_LIGNE;
-		printf("%d : Inform TUNNEL I passed the TUNNEL\n", self.id);
-		msg.train = self;
-		msg.dst = 3;
-		msg.type = MSG_NOTIFICATION;
-		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+		printf("%s %d: Currently on LIGNE.\n", typeString, self.id);
+
+		usleep(waitingTime);
+
+		printf("%s %d: Sending notification to TUNNEL.\n", typeString, self.id);
+		sendMessage(MSG_NOTIFICATION, &msg, ID_TUNNEL, self);
+
+		printf("%s %d: W->E traversal over. Success!\n", typeString, self.id);
 
 	} else {
-		self.position = POS_LIGNE;
 
-        usleep(3000000);
-
-		printf("%d : Informing TUNNEL that I'm comming\n", self.id);
-		msg.dst = 3;
-		msg.type = MSG_REQUEST_FORCE;
-		msg.train = self;
-		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
-
-		usleep(1000000);
-
-		printf("%d : Arriving at TUNNEL\n", self.id);
-        self.position = POS_TUNNEL;
-
-		usleep(1000000);
-		
-		if (self.type == TYPE_TGV) {
-			self.position = POS_LIGNETGV;
-		} else {
-			self.position = POS_LIGNEGL;
-		}
-		
-		printf("%d : Informing TUNNEL that I passed it\n", self.id);
-		msg.dst = 3;
-		msg.type = MSG_NOTIFICATION;
-		msg.train = self;
-		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
-
-		usleep(1000000);
-
-		printf("%d : Informing AIGUILLAGE 2 that I would like to access it (waiting for authorization)\n", self.id);
-		msg.dst = 2;
-		msg.type = MSG_REQUEST;
-		msg.train = self;
-		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+		printf("%s %d: Sending request to access LIGNE and cross TUNNEL.\n", typeString, self.id);
+		sendMessage(MSG_REQUEST, &msg, ID_TUNNEL, self);
 
 		msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
-		printf("%d : received authorization from AIGUILLAGE 2 to pass\n", self.id);
-		self.position = POS_AIGUILLAGE2;
+		printf("%s %d: Permission from TUNNEL received.\n", typeString, self.id);
 
-		usleep(1000000);
+		self.position = POS_LIGNE;
+		printf("%s %d: Currently on LIGNE.\n", typeString, self.id);
 
-		self.position = POS_VOIED;
-		printf("%d : Inform I passed the AIGUILLAGE 2\n", self.id);
-		msg.train = self;
-		msg.dst = 2;
-		msg.type = MSG_NOTIFICATION;
-		msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+		usleep(waitingTime);
+
+		self.position = POS_TUNNEL;
+		printf("%s %d: Currently in TUNNEL.\n", typeString, self.id);
+
+		usleep(waitingTime);
+
+		if(self.type == TYPE_TGV) {
+			self.position = POS_LIGNE_TGV;
+			printf("%s %d: Currently on LIGNE TGV.\n", typeString, self.id);
+		} else {
+			self.position = POS_LIGNE_GL;
+			printf("%s %d: Currently on LIGNE GL.\n", typeString, self.id);
+		}
+
+		printf("%s %d: Sending notification to TUNNEL.\n", typeString, self.id);
+		sendMessage(MSG_NOTIFICATION, &msg, ID_TUNNEL, self);
+
+		usleep(waitingTime);
+
+		printf("%s %d: Sending request to cross AIGUILLAGE 2.\n", typeString, self.id);
+		sendMessage(MSG_REQUEST, &msg, ID_AIGUILLAGE_2, self);
+
+		msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
+		printf("%s %d: Permission from AIGUILLAGE 2 received.\n", typeString, self.id);
+
+		self.position = POS_AIGUILLAGE_2;
+		printf("%s %d: Currently on AIGUILLAGE 2.\n", typeString, self.id);
+
+		usleep(waitingTime);
+
+		self.position = POS_VOIE_D;
+		printf("%s %d: Currently on VOIE D.\n", typeString, self.id);
+
+		printf("%s %d: Sending notification to AIGUILLAGE 2.\n", typeString, self.id);
+		sendMessage(MSG_NOTIFICATION, &msg, ID_AIGUILLAGE_2, self);
+
+		usleep(5000000);
+
+		printf("%s %d: E->W traversal over. Success!\n", typeString, self.id);
 	}
 
 	pthread_exit(NULL);
 }
 
 void exitTrain(int num) {
-	/* Join all 4 manager threads */
     int i;
 
     for (i = 0; i < TRAIN_NBR; i++) {
     	pthread_join(TRAINS[i], NULL);
     }
 
-    /* free allocation */
+    /* free the allocation */
     free(TRAINS);
 
     exit(0);
@@ -273,19 +266,17 @@ void exitTrain(int num) {
 
 void initTrain(const char* file) {
 	time_t start = time(NULL);
-	/* Counter used to initialize a train with a unique id, 0 to 9 are reserved for processes and manager threads */
+	/* counter used to initialize a train with a unique id, 0 to 9 are reserved for processes and manager threads */
 	int idCounter = 10;
 	int error;
 	TrainEvent te;
 	Train t;
 	pthread_t tr;
 
-	LIGNETGV_WE = 0;
-	LIGNEGL_WE = 0;
-	TRAIN_NBR = 0;
 	TRAINS = (pthread_t*)malloc(sizeof(pthread_t)*10);
+	TRAIN_NBR = 0;
 
-	/* Handle interruption signal SIGINT */
+	/* handle interruption signal SIGINT */
 	signal(SIGINT, trainHandlerSIGINT);
 
 	/* init parser */
@@ -305,37 +296,23 @@ void initTrain(const char* file) {
 		t.type = te.type;
 		t.direction = te.direction;
 
-		/* lauc thread */
-		switch (t.type) {
-			case TYPE_M :
-				if((error = pthread_create(&tr, NULL, threadMerchandise, (void*)&t)) != 0) {
-					fprintf(stderr, "Error while creating M train thread.\n");
-					fprintf(stderr, "\tError %d: %s\n", error, strerror(error));
-				} else {
-					TRAINS[TRAIN_NBR] = tr;
-					TRAIN_NBR++;
-				}
-				break;
-            case TYPE_GL :
-                if((error = pthread_create(&tr, NULL, threadPassenger, (void*)&t)) != 0) {
-                    fprintf(stderr, "Error while creating GL train thread.\n");
-                    fprintf(stderr, "\tError %d: %s\n", error, strerror(error));
-                } else {
-                    TRAINS[TRAIN_NBR] = tr;
-                    TRAIN_NBR++;
-                }
-                break;
-            case TYPE_TGV :
-                if((error = pthread_create(&tr, NULL, threadPassenger, (void*)&t)) != 0) {
-                    fprintf(stderr, "Error while creating TGV train thread.\n");
-                    fprintf(stderr, "\tError %d: %s\n", error, strerror(error));
-                } else {
-                    TRAINS[TRAIN_NBR] = tr;
-                    TRAIN_NBR++;
-                }
-                break;
-            default :
-                break;
+		/* launch thread */
+		if(t.type == TYPE_M) {
+			if((error = pthread_create(&tr, NULL, threadMerchandise, (void*)&t)) != 0) {
+				fprintf(stderr, "Error while creating M train thread.\n");
+				fprintf(stderr, "\tError %d: %s\n", error, strerror(error));
+			} else {
+				TRAINS[TRAIN_NBR] = tr;
+				TRAIN_NBR++;
+			}
+		} else {
+			if((error = pthread_create(&tr, NULL, threadPassenger, (void*)&t)) != 0) {
+				fprintf(stderr, "Error while creating passenger train thread.\n");
+				fprintf(stderr, "\tError %d: %s\n", error, strerror(error));
+			} else {
+				TRAINS[TRAIN_NBR] = tr;
+				TRAIN_NBR++;
+			}
 		}
 
 		/* wait 1 second to be sure the thread had time to copy its argument */
@@ -343,7 +320,7 @@ void initTrain(const char* file) {
 	}
 }
 
-void processTrain(int msqid, const char* file) {
+void processTrain(const char* file) {
 	initTrain(file);
 
 	exitTrain(0);

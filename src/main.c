@@ -1,9 +1,6 @@
-#include <signal.h>
 #include "main.h"
 
-/**
- * Called when an error occurred
- */
+/* Called when an error occurred */
 void exitProgram() {
 	/* ignore interruptions while the program is ending */
 	signal(SIGINT, SIG_IGN);
@@ -23,9 +20,7 @@ void exitProgram() {
 	exit(0);
 }
 
-/**
- * Handler for the SIGINT signal
- */
+/* Handler for the SIGINT signal */
 void handlerSIGINT(int num) {
 	/* inform child process that they must finish their execution */
 	if (MANAGER != -1) {
@@ -37,9 +32,7 @@ void handlerSIGINT(int num) {
     exitProgram();
 }
 
-/**
- * Main function for the program
- */
+/* Main function for the program */
 int main(const int argc, const char *argv[]) {
 	if (argc != 2) {
 		printf("Usage :\n");
@@ -47,9 +40,6 @@ int main(const int argc, const char *argv[]) {
 	} else {
 		/* handles interruptions from SIGINT */
 		signal(SIGINT, handlerSIGINT);
-
-        PROGRAM = getpid();
-        PENDING_MSG = 0;
 
 		if((MSQID = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0600)) == -1) {
 	        fprintf(stderr, "Error while creating the global message queue.\n");
@@ -59,7 +49,7 @@ int main(const int argc, const char *argv[]) {
 
 		switch (MANAGER = fork()) {
             case 0 :
-				processManager(MSQID);
+				processManager();
 				break;
 			case -1 :
 				exitProgram();
@@ -67,7 +57,7 @@ int main(const int argc, const char *argv[]) {
 			default :
 				switch (TRAIN = fork()) {
 					case 0 :
-						processTrain(MSQID, argv[1]);
+						processTrain(argv[1]);
 						break;
 					case -1 :
 						exitProgram();
@@ -79,7 +69,7 @@ int main(const int argc, const char *argv[]) {
 				break;
 		}
 
-		/* Signal handler back to normal */
+		/* signal handler back to normal */
 		signal(SIGINT, SIG_DFL);
 	}
 

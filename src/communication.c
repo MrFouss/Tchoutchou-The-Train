@@ -1,5 +1,6 @@
 #include "communication.h"
 
+/* Initialize an empty message list */
 MessageList initList() {
 	MessageList mq;
 
@@ -10,6 +11,7 @@ MessageList initList() {
 	return mq;
 }
 
+/* Add a message at the end of the list */
 void offer(MessageList* mq, Message msg) {
 	MessageListElement* e = (MessageListElement*)malloc(sizeof(MessageListElement));
 	
@@ -24,6 +26,7 @@ void offer(MessageList* mq, Message msg) {
 	mq->size++;
 }
 
+/* Pop and return the first message of the list */
 Message poll(MessageList* mq) {
 	Message msg = mq->first->message;
 
@@ -36,6 +39,7 @@ Message poll(MessageList* mq) {
 	return msg;
 }
 
+/* Remove every messages from the list, thus freeing previously allocated memory */
 void removeList(MessageList* mq) {
 	while (mq->size > 0) {
 		poll(mq);
