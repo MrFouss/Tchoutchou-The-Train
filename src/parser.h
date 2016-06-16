@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include "main.h"
+#include "header_master.h"
 
 /**************/
 /* PROTOTYPES */

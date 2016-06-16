@@ -10,6 +10,7 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
+#include "header_master.h"
 #include "communication.h"
 #include "main.h"
 
@@ -38,7 +39,7 @@ bool canPassAiguillage(Train train);
 /* Check if the train can cross TUNNEL and LIGNE */
 bool canPassTunnel(Train train);
 
-void resolveRequest(char* name, MessageList* ml);
+void resolveRequests(char* name, MessageList* ml);
 
 void resolveNotification(Message msg);
 

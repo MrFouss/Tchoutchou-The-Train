@@ -117,7 +117,7 @@ void sendPermission(MessageType type, Message* msg) {
     msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
 }
 
-void resolveRequest(char* name, MessageList* ml) {
+void resolveRequests(char* name, MessageList* ml) {
     int i;
     bool solved;
     Message msg;
@@ -125,6 +125,7 @@ void resolveRequest(char* name, MessageList* ml) {
     for (i = 0; i < ml->size; i++) {
         solved = false;
         msg = poll(ml);
+        pthread_mutex_lock(&MUTEX_COUNT);
         if(msg.train.type == TYPE_TGV) {
             if(msg.dst == ID_TUNNEL) {
                 if(canPassTunnel(msg.train)) {
@@ -140,6 +141,7 @@ void resolveRequest(char* name, MessageList* ml) {
                 }
             }
         }
+        pthread_mutex_unlock(&MUTEX_COUNT);
         if(solved == false)
             offer(ml, msg);
     }
@@ -147,6 +149,7 @@ void resolveRequest(char* name, MessageList* ml) {
     for (i = 0; i < ml->size; i++) {
         solved = false;
         msg = poll(ml);
+        pthread_mutex_lock(&MUTEX_COUNT);
         if(msg.train.type == TYPE_GL) {
             if(msg.dst == ID_TUNNEL) {
                 if(canPassTunnel(msg.train)) {
@@ -162,6 +165,7 @@ void resolveRequest(char* name, MessageList* ml) {
                 }
             }
         }
+        pthread_mutex_unlock(&MUTEX_COUNT);
         if(solved == false)
             offer(ml, msg);
     }
@@ -169,6 +173,7 @@ void resolveRequest(char* name, MessageList* ml) {
     for (i = 0; i < ml->size; i++) {
         solved = false;
         msg = poll(ml);
+        pthread_mutex_lock(&MUTEX_COUNT);
         if(msg.train.type == TYPE_M) {
             if(msg.dst == ID_TUNNEL) {
                 if(canPassTunnel(msg.train)) {
@@ -184,6 +189,7 @@ void resolveRequest(char* name, MessageList* ml) {
                 }
             }
         }
+        pthread_mutex_unlock(&MUTEX_COUNT);
         if(solved == false)
             offer(ml, msg);
     }
@@ -197,7 +203,6 @@ void resolveNotification(Message msg) {
     else
         modif = -1;
 
-    pthread_mutex_lock(&MUTEX_COUNT);
     switch(msg.dst) {
         case ID_AIGUILLAGE_1:
             CMP_AIGUILLAGE_1 -= modif;
@@ -211,7 +216,7 @@ void resolveNotification(Message msg) {
         default:
             break;
     }
-    pthread_mutex_lock(&MUTEX_COUNT);
+    pthread_mutex_unlock(&MUTEX_COUNT);
 }
 
 void* managerThread(void* arg) {
@@ -244,7 +249,7 @@ void* managerThread(void* arg) {
     	}
 
     	if(ml->size != 0) /* if there are messages to read */
-    		resolveRequest(name, ml);
+    		resolveRequests(name, ml);
     }
 }
 

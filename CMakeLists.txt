@@ -7,6 +7,7 @@ set(SOURCE_FILES
         src/parser.c
         src/train.c
         src/communication.c
+        src/header_master.h
 )
 
 set(GCC_COVERAGE_COMPILE_FLAGS "-W -Wall -ansi -pedantic")

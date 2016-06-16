@@ -8,7 +8,7 @@
 #include <sys/msg.h>
 
 #include "parser.h"
-#include "main.h"
+#include "header_master.h"
 
 /**************/
 /* PROTOTYPES */
