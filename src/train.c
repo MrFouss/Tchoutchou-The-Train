@@ -17,7 +17,7 @@ void sendMessage(MessageType type, Message* msg, int dst, Train train) {
 }
 
 void* threadMerchandise(void* arg) {
-	int waitingTime = 1000000;
+	__useconds_t waitingTime = 1000000;
 	Message msg;
 	Train self;
 
@@ -138,7 +138,7 @@ void* threadMerchandise(void* arg) {
 }
 
 void* threadPassenger(void* arg) {
-	int waitingTime;
+	__useconds_t waitingTime;
 	char* typeString;
 	Message msg;
 	Train self;
@@ -323,7 +323,7 @@ void initTrain(const char* file) {
 	    te = nextEvent(&p);
 
 	    /* wait for the beginning of the event */
-	    usleep(1000000*(te.startTime - (time(NULL) - start)));
+	    usleep((__useconds_t) (1000000*(te.startTime - (time(NULL) - start))));
 
 		pthread_mutex_lock(&MUTEX_TRAINS);
 	    /* set train thread argument */

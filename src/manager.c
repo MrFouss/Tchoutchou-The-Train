@@ -201,8 +201,8 @@ void resolveRequests(char* name, MessageList* ml) {
 }
 
 void resolveNotification(Message msg) {
-    pthread_mutex_lock(&MUTEX_COUNT);
     int modif;
+    pthread_mutex_lock(&MUTEX_COUNT);
     if(msg.train.direction == DIR_WE)
         modif = 1;
     else
@@ -228,7 +228,7 @@ void* managerThread(void* arg) {
 	char name[30]="";
     long permissionFreq = ((ManagerThreadArg*)arg)->permissionFreq;
     int id = ((ManagerThreadArg*)arg)->id;
-    int i;
+
     Message msg;
     MessageList* ml = ((ManagerThreadArg*)arg)->messageList;
 
@@ -237,7 +237,7 @@ void* managerThread(void* arg) {
 	printf("%s : My id is %d.\n", name, id);
 
     while(1) {
-    	usleep(permissionFreq);
+    	usleep((__useconds_t) permissionFreq);
     	while (msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), id, IPC_NOWAIT) != -1) {
 	        switch (msg.type) {
 	            case MSG_REQUEST :
