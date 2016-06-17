@@ -12,7 +12,6 @@
 
 #include "header_master.h"
 #include "communication.h"
-#include "main.h"
 
 /**************/
 /* PROTOTYPES */
