@@ -83,7 +83,7 @@ Lorsque tous les trains sont lancées, la thread principale du processus train s
 
 \subsection{Les threads du processus train}
 
-Chaque thread de train a un comportement prédéfini en fonction de son type (Marchandise, Grande Ligne ou TGV) et de sa direction (est-ouest ou oues-est). Cependant, ils ont un certain nombre de comportements communs :
+Chaque thread de train a un comportement prédéfini en fonction de son type (Marchandise, Grande Ligne ou TGV) et de sa direction (est-ouest ou ouest-est). Cependant, ils ont un certain nombre de comportements communs :
 \begin{itemize}
 	\item Tous les trains sont considérés comme en dehors du sytème à leur démarrage lorsqu'ils proviennent de l'est ou de la voie A. Il doivent recevoir une autorisation de la zone critique la plus proche pour entrer dans le système.
 	\item Lorsqu'un train arrive aux abord d'une zone critique, il s'arrête et envoie une requête à la zone critique en question au travers de la file de message inter-processus.
@@ -98,7 +98,7 @@ Chaque thread de train a un comportement prédéfini en fonction de son type (Ma
 
 Le processus manager ne prend pas d'arguments. Durant l'initialisation, il initialise les 5 compteurs des zones critiques (qui indiquent le nombre de trains sur la voie en question et le sens du flux de train) et le mutex de protection de ces compteurs. Ensuite, un handler de SIGINT est mis en place de manière à ce que, si un signal SIGINT survient, les trois threads de manager sont terminées et le processus manager se termine. Enfin, les trois threads de manager sont créées et lancées dans leur méthode.
 
-Les 3 threads secondaire du manager ne se terminent jamais d'elles-même car elles sont prisent dans une boucle infinie. Lorsque tous les trains ont fini de passer, le processus manager reçoit un signal SIGINT qui sera alors attrapé et les différentes threads seront terminées proprement par le biais de signaux SIGTERM puis avec la libération de ressources.
+Les 3 threads secondaires du manager ne se terminent jamais d'elles-même car elles sont prisent dans une boucle infinie. Lorsque tous les trains ont fini de passer, le processus manager reçoit un signal SIGINT qui sera alors attrapé et les différentes threads seront terminées proprement par le biais de signaux SIGTERM puis avec la libération de ressources.
 
 \subsection{Les threads du processus manager}
 
@@ -121,7 +121,7 @@ Les requêtes précédemment stockées dans la liste de message sont lues une pa
 
 \section{Améliorations possibles}
 
-Actuellement, les processus ne bloquent jamais les signaux. Il pourrait être intéressant d'ignorer les SIGINT par exemple pendant l'initialisation, dans les handlers  et pendant la terminaison des processus (libération des ressources) pour assurer une meilleure robustesse et éviter les appels récursifs dans ces zones de code critiques.
+Actuellement, les processus ne bloquent jamais les signaux. Il pourrait être intéressant d'ignorer les SIGINT par exemple pendant l'initialisation, dans les handlers et pendant la terminaison des processus (libération des ressources) pour assurer une meilleure robustesse et éviter les appels récursifs dans ces zones de code critiques.
 
 Beaucoup de variables sont stockées en publique, ce qui peut être problématique car tous les processus y ont accès et peuvent donc les modifier. On pourrait penser à des passages par arguments ou par file de message pour réduire le nombre de variable globales.
 \end{document}
