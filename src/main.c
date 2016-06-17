@@ -2,12 +2,9 @@
 
 /* Called when an error occurred */
 void exitProgram() {
-	/* ignore interruptions while the program is ending */
-	signal(SIGINT, SIG_IGN);
-
-	/* wait for manager and train */
+	/* wait for trains */
 	waitpid(TRAIN, NULL, 0);
-	/* signal to manager that every train events ave been played and terminated*/
+	/* signal to manager that every train events have been played and terminated */
 	kill(MANAGER, SIGINT);
 	waitpid(MANAGER, NULL, 0);
 
@@ -22,13 +19,11 @@ void exitProgram() {
 
 /* Handler for the SIGINT signal */
 void handlerSIGINT(int num) {
-	/* inform child process that they must finish their execution */
-	if (MANAGER != -1) {
-		kill(MANAGER, SIGINT);
-	}
-	if (TRAIN != -1) {
-		kill(TRAIN, SIGINT);
-	}
+	fprintf(stderr, "\nSIGINT detected: killing all train threads!\n\n");
+	fflush(stderr);
+
+	kill(MANAGER, SIGINT);
+	kill(TRAIN, SIGINT);
     exitProgram();
 }
 

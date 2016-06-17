@@ -72,6 +72,8 @@ bool canPassTunnel(Train t) {
     Direction dir = t.direction;
     TrainType type = t.type;
 
+    /* TODO */
+
     if(dir == DIR_WE) { /* west to east */
         if(CMP_TUNNEL >= 0) {
             CMP_TUNNEL++;
@@ -89,20 +91,25 @@ bool canPassTunnel(Train t) {
         }
     } else {
         if(CMP_TUNNEL <= 0) {
-            CMP_TUNNEL--;
             switch(type) {
                 case TYPE_TGV:
-                    if(CMP_LIGNE_TGV <= 0)
+                    if(CMP_LIGNE_TGV <= 0) {
                         CMP_LIGNE_TGV--;
+                        CMP_TUNNEL--;
+                        return true;
+                    }
                     break;
                 case TYPE_GL:
-                    if(CMP_LIGNE_GL <= 0)
+                    if(CMP_LIGNE_GL <= 0) {
                         CMP_LIGNE_GL--;
+                        CMP_TUNNEL--;
+                        return true;
+                    }
                     break;
-                default:
-                    break;
+                case TYPE_M:
+                    CMP_TUNNEL--;
+                    return true;
             }
-            return true;
         }
     }
 
@@ -110,11 +117,11 @@ bool canPassTunnel(Train t) {
 }
 
 void sendPermission(MessageType type, Message* msg) {
-    int dst = msg->dst;
+    long dst = msg->dst;
     msg->dst = msg->src;
     msg->type = type;
     msg->src = dst;
-    msgsnd(MSQID, &msg, sizeof(Message) - sizeof(long), 0);
+    msgsnd(MSQID, msg, sizeof(Message) - sizeof(long), 0);
 }
 
 void resolveRequests(char* name, MessageList* ml) {
@@ -129,13 +136,13 @@ void resolveRequests(char* name, MessageList* ml) {
         if(msg.train.type == TYPE_TGV) {
             if(msg.dst == ID_TUNNEL) {
                 if(canPassTunnel(msg.train)) {
-                    printf("%s : Sending permission to TGV %d.\n", name, msg.dst);
+                    printf("%s : Sending permission to TGV %ld.\n", name, msg.src);
                     sendPermission(MSG_PERMISSION, &msg);
                     solved = true;
                 }
             } else {
                 if(canPassAiguillage(msg.train)) {
-                    printf("%s : Sending permission to TGV %d.\n", name, msg.dst);
+                    printf("%s : Sending permission to TGV %ld.\n", name, msg.src);
                     sendPermission(MSG_PERMISSION, &msg);
                     solved = true;
                 }
@@ -153,13 +160,13 @@ void resolveRequests(char* name, MessageList* ml) {
         if(msg.train.type == TYPE_GL) {
             if(msg.dst == ID_TUNNEL) {
                 if(canPassTunnel(msg.train)) {
-                    printf("%s : Sending permission to GL %d.\n", name, msg.dst);
+                    printf("%s : Sending permission to GL %ld.\n", name, msg.src);
                     sendPermission(MSG_PERMISSION, &msg);
                     solved = true;
                 }
             } else {
                 if(canPassAiguillage(msg.train)) {
-                    printf("%s : Sending permission to GL %d.\n", name, msg.dst);
+                    printf("%s : Sending permission to GL %ld.\n", name, msg.src);
                     sendPermission(MSG_PERMISSION, &msg);
                     solved = true;
                 }
@@ -177,13 +184,13 @@ void resolveRequests(char* name, MessageList* ml) {
         if(msg.train.type == TYPE_M) {
             if(msg.dst == ID_TUNNEL) {
                 if(canPassTunnel(msg.train)) {
-                    printf("%s : Sending permission to M %d.\n", name, msg.dst);
+                    printf("%s : Sending permission to M %ld.\n", name, msg.src);
                     sendPermission(MSG_PERMISSION, &msg);
                     solved = true;
                 }
             } else {
                 if(canPassAiguillage(msg.train)) {
-                    printf("%s : Sending permission to M %d.\n", name, msg.dst);
+                    printf("%s : Sending permission to M %ld.\n", name, msg.src);
                     sendPermission(MSG_PERMISSION, &msg);
                     solved = true;
                 }
@@ -236,20 +243,22 @@ void* managerThread(void* arg) {
     	while (msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), id, IPC_NOWAIT) != -1) {
 	        switch (msg.type) {
 	            case MSG_REQUEST :
-	                printf("%s : Request received from %d.\n", name, msg.src);
+	                printf("%s : Request received from %ld.\n", name, msg.src);
 	                offer(ml, msg); /* store request in message queue */
 	                break;
 	            case MSG_NOTIFICATION :
-	            	printf("%s : Notification received from %d.\n", name, msg.src);
+	            	printf("%s : Notification received from %ld.\n", name, msg.src);
                     resolveNotification(msg);
 	                break;
                 default :
                     fprintf(stderr, "Error: you're not supposed to go there");
+                    break;
 	        }
     	}
 
-    	if(ml->size != 0) /* if there are messages to read */
-    		resolveRequests(name, ml);
+    	if(ml->size != 0) { /* if there are messages to read */
+            resolveRequests(name, ml);
+        }
     }
 }
 

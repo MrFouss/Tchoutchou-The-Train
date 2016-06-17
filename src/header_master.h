@@ -58,8 +58,8 @@ typedef enum MessageType {
 } MessageType;
 
 typedef struct Message {
-    int dst;
-    int src;
+    long dst;
+    long src;
     MessageType type;
     Train train;
 } Message;
@@ -125,6 +125,12 @@ int CMP_LIGNE_TGV, CMP_LIGNE_GL, CMP_TUNNEL, CMP_AIGUILLAGE_1, CMP_AIGUILLAGE_2;
 
 /* Mutex used to lock and protect the counters */
 pthread_mutex_t MUTEX_COUNT;
+
+/* Mutex used to create safely the trains */
+pthread_mutex_t MUTEX_TRAINS;
+
+/* Condition on the use of the arguments of the trains */
+pthread_cond_t COND_TRAINS;
 
 /* List of trains */
 pthread_t* TRAINS;
