@@ -72,7 +72,8 @@ Chaque thread de train a un comportement prédéfini en fonction de son type (Ma
 \begin{itemize}
 	\item Tous les trains sont considérés comme en dehors du sytème à leur démarrage. Il doivent recevoir une autorisation de la zone critique la plus proche pour entrer dans le système.
 	\item Lorsqu'un train arrive aux abord d'une zone critique, il s'arrête et envoie une requête à la zone critique en question au travers de la file de message inter-processus.
-	\item Les trains doivent recevoir une autorisation et aquérir un mutex pour passer le tunnel afin qu'il n'y ait qu'un seul train à la fois dans le tunnel.
+	\item Après avoir quitté une zone critique, le train envoie une notification au manager de la zone critique.
+	\item Les trains doivent recevoir une autorisation et aquérir un mutex pour passer le tunnel afin qu'il n'y ait qu'un seul train à la fois dans le tunnel.
 \end{itemize}
 Une thread de train se termine d'elle même lorsque le train quitte le système.
 
