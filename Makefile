@@ -28,4 +28,4 @@ $(EXEC): $(OBJDIR)/parse.o $(OBJDIR)/main.o $(OBJDIR)/communication.o $(OBJDIR)/
 .PHONY: clean
 
 clean:
-	rm -rf $(OBJ) $(EXEC)
+	rm -rf $(EXEC) $(OBJDIR)/parse.o $(OBJDIR)/main.o $(OBJDIR)/communication.o $(OBJDIR)/manager.o $(OBJDIR)/train.o
