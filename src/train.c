@@ -304,9 +304,6 @@ void initTrain(const char* file) {
 	Train t;
 	pthread_t tr;
 
-	TRAINS = (pthread_t*)malloc(sizeof(pthread_t)*10);
-	TRAIN_NBR = 0;
-
 	pthread_mutex_init(&MUTEX_TRAINS, NULL);
 	pthread_mutex_init(&MUTEX_TUNNEL, NULL);
 
@@ -315,6 +312,9 @@ void initTrain(const char* file) {
 
 	/* init parser */
     p = initParser(file);
+
+    TRAINS = (pthread_t*)malloc(sizeof(pthread_t)*p.remEventNbr);
+	TRAIN_NBR = 0;
 
     /* while there is remaining events */
     while (p.remEventNbr > 0) {
