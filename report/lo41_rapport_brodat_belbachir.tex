@@ -49,6 +49,14 @@ Les threads du processus train et les threads du processus manager ont besoin de
 
 Un message contient un destinataire (identifiant du message), une source, un type et des données sur le train lorsque celui-ci est la source du message. Les trains ont des identifiants supérieurs ou égaux à 10 car les identifiant de 1 à 9 sont réservés pour des threads particulières qui requièrent des valeurs statiques (aiguillage 1, aiguillage 2 et tunnel par exemple ont les identifiants 1, 2, et 3).
 
+\subsection{Fonctionnement global simplifié}
+
+\begin{figure}[!htbp]
+	\centering
+	\includegraphics[width=.5\linewidth]{img/reseau_petri.png}
+	\caption{Réseau de Petri appliqué au cas des trains de marchandise sur le W $\rightarrow$ E}
+\end{figure}
+
 \section{Le processus train}
 
 \subsection{Initialisation, interruption et terminaison}
@@ -97,12 +105,11 @@ Les trois threads du manager (aiguillage 1, aiguillage 2 et tunnel) ont une uniq
 
 Ainsi, à la fin de chaque itération pour une thread donnée, cette thread a traitée tous les messages qui lui étaient destinés au début de l'itération.
 
-\subsubsection{La réception des messages}
+\subsubsection{Réception et résolution des messages}
 
-La réception des messages se fait, comme expliqué plus haut, par le stockage dans une liste de messages (structure créée pour l'occasion).
+La réception des messages se fait, comme expliqué plus haut, par le stockage dans une liste de messages (structure créée pour l'occasion). Les messages de notification sont alors tous traités de manière à libérer le plus de zones critiques possibles.
 
-\subsubsection{Résolution des messages}
-
+Ensuite, les requêtes précédemment stockées dans la liste de message sont lues une par une et les requêtes sont traitées par priorité décroissante. Si une requête ne peut donner lieu à une autorisation de passer, elle est remise dans la liste de message pour être traitée ultérieurement.
 
 \section{Améliorations possibles}
 
