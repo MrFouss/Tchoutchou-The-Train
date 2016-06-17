@@ -36,6 +36,9 @@ int main(const int argc, const char *argv[]) {
 		/* handles interruptions from SIGINT */
 		signal(SIGINT, handlerSIGINT);
 
+		MANAGER = -1;
+		TRAIN = -1;
+
 		if((MSQID = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0600)) == -1) {
 	        fprintf(stderr, "Error while creating the global message queue.\n");
 	        fprintf(stderr, "\tError %d: %s\n", errno, strerror(errno));
