@@ -38,3 +38,4 @@
 *.fls
 *.fdb_latexmk
 *.synctex.gz
+*.tex.backup
