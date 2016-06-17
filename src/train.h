@@ -1,11 +1,17 @@
 #ifndef TRAIN_H
 #define TRAIN_H
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#include <unistd.h>
+#endif
+
 #include <signal.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/msg.h>
+#include <bits/sigthread.h>
 
 #include "parser.h"
 #include "header_master.h"

@@ -1,6 +1,11 @@
 #ifndef MANAGER_H
 #define MANAGER_H
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#include <unistd.h>
+#endif
+
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -9,9 +14,11 @@
 #include <stdbool.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include <bits/sigthread.h>
 
 #include "header_master.h"
 #include "communication.h"
+#include "main.h"
 
 /**************/
 /* PROTOTYPES */

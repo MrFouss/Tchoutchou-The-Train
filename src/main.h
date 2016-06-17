@@ -1,10 +1,16 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#include <unistd.h>
+#endif
+
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
 #include <sys/wait.h>
+#include <signal.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
