@@ -1,0 +1,47 @@
+\ProvidesPackage{prettylatex}[2016/03/06]
+\usepackage{titletoc}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[top=2cm, bottom=2cm, left=2cm, right=2cm]{geometry}
+\usepackage{changepage}
+\usepackage[frenchb]{babel} % adopte les règles de typographie française
+\usepackage{libertine}
+\usepackage{amsmath}
+\usepackage{wrapfig}
+\usepackage{multicol}
+\usepackage{mathtools}
+\usepackage{hyperref}
+\usepackage{array}
+
+\setlength{\columnsep}{1cm}
+
+\setlength{\parskip}{1em} % vertical space between paragraphs
+\setlength{\baselineskip}{0em} % vertical space between line in a paragraph
+
+\renewcommand{\baselinestretch}{1.2}
+\renewcommand{\familydefault}{\sfdefault}
+\renewcommand{\Frlabelitemi}{$\bullet$}
+\renewcommand{\Frlabelitemii}{$\circ$}
+\renewcommand{\Frlabelitemiii}{--}
+
+\renewcommand{\contentsname}{Table des matières} % new name for tableofcontents
+\renewcommand{\listfigurename}{Table des illustrations} % new name for \listoffigures
+\renewcommand{\listtablename}{Liste des tableaux} % new name for \listoftables
+
+\newcommand{\neverindent}{
+    \setlength{\parindent}{0pt} % indentation of the first line of a paragraph
+}
+
+\newcommand{\autoindent}{
+    \setlength{\parindent}{\pardefault}
+}
+
+\titlecontents*{chapter}% <section-type>
+    [0pt]% <left>
+    {\addvspace{1em}}% <above-code>
+    {\bfseries\chaptername\ \thecontentslabel\quad}% <numbered-entry-format>
+    {}% <numberless-entry-format>
+    {\bfseries\hfill\contentspage}% <filler-page-format>
+
+\endinput

@@ -1,0 +1,59 @@
+\ProvidesPackage{titlepage}[2016/03/06]
+
+% Variables definition
+\renewcommand{\top}[2]{
+    \def \TopOne {#1}
+    \def \TopTwo {#2}
+}
+\renewcommand{\title}[2]{
+    \def \MainTitle {#1}
+    \def \SecondaryTitle {#2}
+}
+\renewcommand{\author}[1]{
+    \def \Author {#1}
+}
+\renewcommand{\date}[1]{
+    \def \Date {#1}
+}
+
+\newcommand{\maketitlepage}{
+    \begin{titlepage}
+        \centering
+
+        \textsc{\textbf{\Large \TopOne}} \\
+
+        \vspace{2cm}
+
+        \textsc{\large \TopTwo} \\
+
+        \vspace{2cm}
+
+        \rule{\linewidth}{1mm} \\ \vspace{0.6cm}
+        \textbf{\Huge \textsc{\MainTitle}} \\ \vspace{0.6cm}
+        \textbf{\Large \SecondaryTitle} \\  \vspace{0.2cm}
+        \rule{\linewidth}{1mm}
+
+        \vspace{4cm}
+
+    %    \begin{minipage}{0.4\textwidth}
+    %    \begin{flushleft} \large
+            %\large{\emph{\'Etudiants:}} \\
+            \large{\Author} \\
+    %    \end{flushleft}
+    %    \end{minipage}
+        %~
+        %\begin{minipage}{0.4\textwidth}
+        %\begin{flushright} \large
+    %        \emph{Supervisor:} \\
+    %        Dr. James \textsc{Smith} % Supervisor's Name
+        %\end{flushright}
+        %\end{minipage} \\
+
+        \vfill
+
+        {\large \Date} \\ \vspace{2cm}
+
+        \vfill
+
+    \end{titlepage}
+}
