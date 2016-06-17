@@ -62,10 +62,14 @@ void* threadMerchandise(void* arg) {
         msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
 		printf("M %d: Permission from TUNNEL received.\n", self.id);
 
+		pthread_mutex_lock(&MUTEX_TUNNEL);
+
 		self.position = POS_TUNNEL;
         printf("M %d: Currently in TUNNEL.\n", self.id);
 
 		usleep(waitingTime);
+
+		pthread_mutex_unlock(&MUTEX_TUNNEL);
 
 		self.position = POS_LIGNE;
         printf("M %d: Currently on LIGNE.\n", self.id);
@@ -90,10 +94,14 @@ void* threadMerchandise(void* arg) {
 
         usleep(waitingTime);
 
+		pthread_mutex_lock(&MUTEX_TUNNEL);
+
 		self.position = POS_TUNNEL;
         printf("M %d: Currently in TUNNEL.\n", self.id);
 
 		usleep(waitingTime);
+
+		pthread_mutex_unlock(&MUTEX_TUNNEL);
 
         self.position = POS_LIGNE_M_EW;
 		printf("M %d: Currently on LIGNE M (E->W).\n", self.id);
@@ -193,10 +201,14 @@ void* threadPassenger(void* arg) {
 		msgrcv(MSQID, &msg, sizeof(Message) - sizeof(long), self.id, 0);
 		printf("%s %d: Permission from TUNNEL received.\n", typeString, self.id);
 
+		pthread_mutex_lock(&MUTEX_TUNNEL);
+
 		self.position = POS_TUNNEL;
 		printf("%s %d: Currently in TUNNEL.\n", typeString, self.id);
 
 		usleep(waitingTime);
+
+		pthread_mutex_unlock(&MUTEX_TUNNEL);
 
 		self.position = POS_LIGNE;
 		printf("%s %d: Currently on LIGNE.\n", typeString, self.id);
@@ -221,10 +233,14 @@ void* threadPassenger(void* arg) {
 
 		usleep(waitingTime);
 
+		pthread_mutex_lock(&MUTEX_TUNNEL);
+
 		self.position = POS_TUNNEL;
 		printf("%s %d: Currently in TUNNEL.\n", typeString, self.id);
 
 		usleep(waitingTime);
+
+		pthread_mutex_unlock(&MUTEX_TUNNEL);
 
 		if(self.type == TYPE_TGV) {
 			self.position = POS_LIGNE_TGV;
@@ -292,6 +308,7 @@ void initTrain(const char* file) {
 	TRAIN_NBR = 0;
 
 	pthread_mutex_init(&MUTEX_TRAINS, NULL);
+	pthread_mutex_init(&MUTEX_TUNNEL, NULL);
 
 	/* handle interruption signal SIGINT */
 	signal(SIGINT, trainHandlerSIGINT);

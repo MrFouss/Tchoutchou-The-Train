@@ -126,6 +126,9 @@ int CMP_LIGNE_TGV, CMP_LIGNE_GL, CMP_TUNNEL, CMP_AIGUILLAGE_1, CMP_AIGUILLAGE_2;
 /* Mutex used to lock and protect the counters */
 pthread_mutex_t MUTEX_COUNT;
 
+/* Mutex used to lock and protect the tunnel */
+pthread_mutex_t MUTEX_TUNNEL;
+
 /* Mutex used to create safely the trains */
 pthread_mutex_t MUTEX_TRAINS;
 
