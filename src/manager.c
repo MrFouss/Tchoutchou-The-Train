@@ -72,8 +72,6 @@ bool canPassTunnel(Train t) {
     Direction dir = t.direction;
     TrainType type = t.type;
 
-    /* TODO */
-
     if(dir == DIR_WE) { /* west to east */
         if(CMP_TUNNEL >= 0) {
             CMP_TUNNEL++;
